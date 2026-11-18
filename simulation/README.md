@@ -41,7 +41,7 @@ simulation/
 - **Main Haulage Drift**: 30-meter straight haulage tunnel with irregular rock walls and dim point lights.
 - **T-Junction Alpha**: 3-way intersection at `(30.0, 0.0, 0.0)` connecting the main drift to the north crosscut.
 - **Crosscut Drift & 90° Turn**: Perpendicular 20-meter drift turning eastward into the east exploration drift.
-- **15° Inclined Test Ramp**: 12-meter ramp climbing 3.1 meters to an upper extraction level.
+- **15° Inclined Test Ramp**: 12-meter horizontal run ramp climbing 3.22 meters (12.42m slope length) to an upper extraction level (x=42m to 54m, upper drift at z=3.22m).
   > [!NOTE]
   > The 15-degree incline represents an architectural test configuration for slope negotiation, not empirical proof of robot traversability. Hardware/chassis validation occurs in Milestone M2.
 - **Dim Subterranean Lighting**: Subdued ambient illumination (`0.04 0.04 0.04 1.0`) with localized mine lantern point lights at key junctions.

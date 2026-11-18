@@ -47,10 +47,10 @@ The mine network extends over 125 meters of interconnected tunnels:
        |      [East Drift Extension] (X: 36 to 56, Y: 25)
        |
        v
-[15° Incline Ramp] (X: 36 to 48, Y: 0, Z: 0 to 3.1)
+[15° Incline Ramp] (X: 42 to 54, Y: 0, Z: 0 to 3.22)
        |
        v
-[Upper Level Drift] (X: 48 to 58, Y: 0, Z: 3.1)
+[Upper Level Drift] (X: 54 to 68, Y: 0, Z: 3.22)
 ```
 
 ---

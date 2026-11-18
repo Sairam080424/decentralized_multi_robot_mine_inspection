@@ -41,10 +41,10 @@ environment:
         pose: [45.0, 25.0, 0.0, 0.0, 0.0, 0.0]
       - id: "ramp_test_15deg"
         type: "tunnel_ramp_15deg"
-        pose: [40.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        pose: [42.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       - id: "drift_upper_10m"
         type: "tunnel_straight_10m"
-        pose: [55.0, 0.0, 2.588, 0.0, 0.0, 0.0]
+        pose: [54.0, 0.0, 3.215, 0.0, 0.0, 0.0]
 
 robot_spawn_points:
   # Designated portal staging area (no robots spawned in M1; ready for M2)
@@ -71,7 +71,7 @@ terrain_hazards:
     friction_mu1: 0.22
     friction_mu2: 0.20
   incline_ramp:
-    pose: [40.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    pose: [42.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     incline_angle_deg: 15.0 # Test configuration; traversability subject to M2 validation
 
 obstacles:

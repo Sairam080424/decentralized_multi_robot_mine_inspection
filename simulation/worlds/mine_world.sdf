@@ -120,7 +120,7 @@
       Robot A Spawn Location (M2 Explorer): (2.0, 0.0, 0.1, 0, 0, 0)
       Robot B Spawn Location (M2 Inspector): (-2.0, 0.0, 0.1, 0, 0, 0)
       Crosscut Inspection Waypoint: (30.0, 20.0, 0.0, 0, 0, 1.5708)
-      Upper Ramp Station Waypoint: (66.0, 0.0, 2.68, 0, 0, 0)
+      Upper Ramp Station Waypoint: (66.0, 0.0, 3.22, 0, 0, 0)
     -->
     <model name="portal_staging_ground">
       <static>true</static>
@@ -294,7 +294,7 @@
       </link>
     </model>
 
-    <!-- Inclined Ramp (15-degree slope, x=42 to x=52m, rise=2.68m) -->
+    <!-- Inclined Ramp (15-degree slope, x=42 to x=54m, rise=3.215m) -->
     <!-- Treated strictly as a test configuration, not proof of robot traversability -->
     <include>
       <name>ramp_15deg_section</name>
@@ -302,44 +302,44 @@
       <pose>42.0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Upper Level Tunnel Section (x=54 to x=68m, z=2.68m) -->
+    <!-- Upper Level Tunnel Section (x=54 to x=68m, elevation z=3.215m) -->
     <model name="upper_drift_section">
       <static>true</static>
       <link name="upper_floor">
-        <pose>61.0 0 2.63 0 0 0</pose>
-        <collision name="col"><geometry><box><size>14.0 4.3 0.1</size></box></geometry></collision>
+        <pose>61.0 0 3.165 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 4.3 0.1</size></box></geometry></collision>
         <visual name="vis">
-          <geometry><box><size>14.0 4.3 0.1</size></box></geometry>
+          <geometry><box><size>14.2 4.3 0.1</size></box></geometry>
           <material><ambient>0.22 0.20 0.18 1.0</ambient><diffuse>0.29 0.26 0.24 1.0</diffuse></material>
         </visual>
       </link>
       <link name="upper_left_wall">
-        <pose>61.0 1.95 4.18 0 0 0</pose>
-        <collision name="col"><geometry><box><size>14.0 0.4 3.0</size></box></geometry></collision>
+        <pose>61.0 1.95 4.715 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 0.4 3.0</size></box></geometry></collision>
         <visual name="vis">
-          <geometry><box><size>14.0 0.4 3.0</size></box></geometry>
+          <geometry><box><size>14.2 0.4 3.0</size></box></geometry>
           <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
         </visual>
       </link>
       <link name="upper_right_wall">
-        <pose>61.0 -1.95 4.18 0 0 0</pose>
-        <collision name="col"><geometry><box><size>14.0 0.4 3.0</size></box></geometry></collision>
+        <pose>61.0 -1.95 4.715 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 0.4 3.0</size></box></geometry></collision>
         <visual name="vis">
-          <geometry><box><size>14.0 0.4 3.0</size></box></geometry>
+          <geometry><box><size>14.2 0.4 3.0</size></box></geometry>
           <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
         </visual>
       </link>
       <link name="upper_ceiling">
-        <pose>61.0 0 5.88 0 0 0</pose>
-        <collision name="col"><geometry><box><size>14.0 4.3 0.4</size></box></geometry></collision>
+        <pose>61.0 0 6.415 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 4.3 0.4</size></box></geometry></collision>
         <visual name="vis">
-          <geometry><box><size>14.0 4.3 0.4</size></box></geometry>
+          <geometry><box><size>14.2 4.3 0.4</size></box></geometry>
           <material><ambient>0.15 0.14 0.13 1.0</ambient><diffuse>0.20 0.18 0.17 1.0</diffuse></material>
         </visual>
       </link>
       <!-- End cap rock face -->
       <link name="upper_end_wall">
-        <pose>68.0 0 4.18 0 0 0</pose>
+        <pose>68.1 0 4.715 0 0 0</pose>
         <collision name="col"><geometry><box><size>0.4 4.3 3.0</size></box></geometry></collision>
         <visual name="vis">
           <geometry><box><size>0.4 4.3 3.0</size></box></geometry>

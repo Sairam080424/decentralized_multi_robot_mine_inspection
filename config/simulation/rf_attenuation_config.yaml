@@ -10,6 +10,7 @@ radio_parameters:
 
 underground_attenuation:
   corner_diffraction_loss_db: 18.0
+  obstacle_shadow_loss_db: 12.0
   los_cutoff_distance_m: 60.0
   nlos_corner_limit: 2
 
