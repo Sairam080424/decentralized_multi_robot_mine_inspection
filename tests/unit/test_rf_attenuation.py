@@ -30,6 +30,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from layer1_robot_environment.communication_simulation.subterranean_rf_model import (
     SubterraneanRFModel,
+    TunnelTopology,
 )
 
 
@@ -209,3 +210,156 @@ def test_forced_blackout():
     link_after = model.evaluate_link((0.0, 0.0, 0.5), (2.0, 0.0, 0.5))
     assert link_after["is_connected"] is True
     assert link_after["status"] == "CONNECTED"
+
+
+# ==============================================================================
+# Issue 2 & Issue 3 Required Regression & Geometry Tests
+# ==============================================================================
+
+def test_segments_intersect_collinear_overlapping():
+    """Verify _segments_intersect detects overlapping collinear segments."""
+    # Collinear along y=0: [0, 5] and [3, 8] overlap on [3, 5]
+    p1, p2 = (0.0, 0.0), (5.0, 0.0)
+    q1, q2 = (3.0, 0.0), (8.0, 0.0)
+    assert SubterraneanRFModel._segments_intersect(p1, p2, q1, q2) is True
+
+    # Collinear along y=0: [0, 2] and [3, 5] do NOT overlap
+    q3, q4 = (3.0, 0.0), (5.0, 0.0)
+    p3, p4 = (0.0, 0.0), (2.0, 0.0)
+    assert SubterraneanRFModel._segments_intersect(p3, p4, q3, q4) is False
+
+
+def test_segments_intersect_endpoint_contact():
+    """Verify _segments_intersect detects T-contact and shared endpoint contact."""
+    # T-contact: q1 touches midpoint of [p1, p2]
+    p1, p2 = (0.0, 0.0), (10.0, 0.0)
+    q1, q2 = (5.0, 0.0), (5.0, 5.0)
+    assert SubterraneanRFModel._segments_intersect(p1, p2, q1, q2) is True
+
+    # Shared endpoint: p2 == q1
+    p3, p4 = (0.0, 0.0), (4.0, 4.0)
+    q3, q4 = (4.0, 4.0), (8.0, 0.0)
+    assert SubterraneanRFModel._segments_intersect(p3, p4, q3, q4) is True
+
+
+def test_segments_intersect_parallel_and_near_parallel():
+    """Verify _segments_intersect rejects parallel disjoint segments and handles tolerances."""
+    # Parallel disjoint segments
+    p1, p2 = (0.0, 0.0), (10.0, 0.0)
+    q1, q2 = (0.0, 1.0), (10.0, 1.0)
+    assert SubterraneanRFModel._segments_intersect(p1, p2, q1, q2) is False
+
+    # Standard crossing segments
+    p3, p4 = (0.0, 0.0), (10.0, 10.0)
+    q3, q4 = (0.0, 10.0), (10.0, 0.0)
+    assert SubterraneanRFModel._segments_intersect(p3, p4, q3, q4) is True
+
+
+def test_obstacle_intersection_3d_above_obstacle():
+    """Verify that a path passing entirely above an obstacle volume does not register a collision."""
+    # Obstacle AABB: x in [4.0, 6.0], y in [-1.0, 1.0], z in [0.0, 2.0]
+    aabb = (4.0, 6.0, -1.0, 1.0, 0.0, 2.0)
+
+    # Path from x=0 to x=10 passing at z=2.5m (entirely above obstacle)
+    p0 = (0.0, 0.0, 2.5)
+    p1 = (10.0, 0.0, 2.5)
+    assert SubterraneanRFModel._segment_intersects_aabb_3d(p0, p1, aabb) is False
+
+
+def test_obstacle_intersection_3d_through_obstacle():
+    """Verify that a path penetrating the 3D obstacle volume registers a collision."""
+    aabb = (4.0, 6.0, -1.0, 1.0, 0.0, 2.0)
+
+    # Horizontal path passing directly through obstacle at z=1.0m
+    p0 = (0.0, 0.0, 1.0)
+    p1 = (10.0, 0.0, 1.0)
+    assert SubterraneanRFModel._segment_intersects_aabb_3d(p0, p1, aabb) is True
+
+
+def test_obstacle_intersection_3d_around_obstacle():
+    """Verify that a path passing to the side of an obstacle does not register a collision."""
+    aabb = (4.0, 6.0, -1.0, 1.0, 0.0, 2.0)
+
+    # Path at y=2.0 (outside y in [-1, 1])
+    p0 = (0.0, 2.0, 1.0)
+    p1 = (10.0, 2.0, 1.0)
+    assert SubterraneanRFModel._segment_intersects_aabb_3d(p0, p1, aabb) is False
+
+
+def test_obstacle_intersection_3d_sloped_path():
+    """Verify that a 3D sloped trajectory passing through an obstacle is detected."""
+    aabb = (4.0, 6.0, -1.0, 1.0, 0.0, 2.0)
+
+    # Path climbing from (0, 0, 0) to (10, 0, 3.0); at x=5, z=1.5 which is inside [0, 2]
+    p0 = (0.0, 0.0, 0.0)
+    p1 = (10.0, 0.0, 3.0)
+    assert SubterraneanRFModel._segment_intersects_aabb_3d(p0, p1, aabb) is True
+
+    # Path climbing steep from (0, 0, 2.2) to (10, 0, 5.0); at x=5, z=3.6 which is above [0, 2]
+    p2 = (0.0, 0.0, 2.2)
+    p3 = (10.0, 0.0, 5.0)
+    assert SubterraneanRFModel._segment_intersects_aabb_3d(p2, p3, aabb) is False
+
+
+def test_arbitrary_custom_tunnel_topology():
+    """
+    Verify RF model on a completely new, user-defined tunnel layout
+    (Z-shaped corridor layout at arbitrary coordinates [100.0, 200.0] x [50.0, 150.0])
+    proving the model does not depend on hard-coded mine coordinates.
+    """
+    custom_topo = TunnelTopology()
+    # Node sequence forming a Z-bend corridor:
+    # Segment 1: (100, 50, 0) to (140, 50, 0) [straight east]
+    # Segment 2: (140, 50, 0) to (140, 90, 0) [turn north, 90 deg bend]
+    # Segment 3: (140, 90, 0) to (180, 90, 0) [turn east, second 90 deg bend]
+    custom_topo.add_node("node_a", (100.0, 50.0, 0.0))
+    custom_topo.add_node("node_b", (140.0, 50.0, 0.0))
+    custom_topo.add_node("node_c", (140.0, 90.0, 0.0))
+    custom_topo.add_node("node_d", (180.0, 90.0, 0.0))
+
+    custom_topo.add_edge("node_a", "node_b", "custom_drift_1", width=3.5, height=3.0)
+    custom_topo.add_edge("node_b", "node_c", "custom_crosscut", width=3.5, height=3.0)
+    custom_topo.add_edge("node_c", "node_d", "custom_drift_2", width=3.5, height=3.0)
+
+    # Instantiate model with custom topology and arbitrary wall geometry
+    custom_walls = [
+        # Wall separating segment 1 from segment 3
+        ((110.0, 70.0), (170.0, 70.0)),
+        ((135.0, 45.0), (135.0, 85.0)),
+    ]
+    model = SubterraneanRFModel(
+        topology=custom_topo,
+        wall_segments=custom_walls,
+        los_cutoff_distance_m=80.0,
+        nlos_corner_limit=2,
+        random_seed=42,
+    )
+
+    # 1. Straight tunnel path in custom layout (0 corners, LOS)
+    link_straight = model.evaluate_link((105.0, 50.0, 0.5), (125.0, 50.0, 0.5))
+    assert link_straight["has_line_of_sight"] is True
+    assert link_straight["corner_count"] == 0
+    assert link_straight["is_connected"] is True
+    assert link_straight["status"] == "CONNECTED"
+
+    # 2. One 90-degree bend in custom layout (1 corner, NLOS)
+    link_1_bend = model.evaluate_link((120.0, 50.0, 0.5), (140.0, 70.0, 0.5))
+    assert link_1_bend["has_line_of_sight"] is False
+    assert link_1_bend["corner_count"] == 1
+    assert link_1_bend["is_connected"] is True
+    assert link_1_bend["status"] == "CONNECTED"
+    assert link_1_bend["rssi_dbm"] < -60.0
+
+    # 3. Two successive bends in custom layout (2 corners, exceeds limit)
+    link_2_bends = model.evaluate_link((110.0, 50.0, 0.5), (170.0, 90.0, 0.5))
+    assert link_2_bends["has_line_of_sight"] is False
+    assert link_2_bends["corner_count"] == 2
+    assert link_2_bends["is_connected"] is False
+    assert link_2_bends["status"] == "EXCEEDED_CORNER_LIMIT"
+    assert link_2_bends["packet_loss_rate"] == 1.0
+
+    # 4. Point outside custom topology bounds
+    link_outside = model.evaluate_link((100.0, 50.0, 0.5), (500.0, 500.0, 0.5))
+    assert link_outside["is_connected"] is False
+    assert link_outside["status"] == "OUTSIDE_MINE_BOUNDS"
+

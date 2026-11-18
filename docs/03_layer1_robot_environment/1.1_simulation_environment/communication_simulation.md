@@ -80,7 +80,19 @@ Execute ping test between Robot A and B while moving around a 90-degree corner; 
 
 ## 15. Implementation Status
 `IN_PROGRESS`
-Milestone M1 subterranean RF communication attenuation model implemented in `src/layer1_robot_environment/communication_simulation/subterranean_rf_model.py` and CLI evaluator `scripts/simulate_rf_attenuation.py`. Features distance-dependent path loss, corner diffraction penalty (18 dB/corner), packet loss sigmoid, and forced blackout mode. Full Gazebo C++ system plugin integration will be expanded in Milestone M6 during peer discovery and networking.
+
+- **Milestone M1 Implementation (Completed)**:
+  - Analytical subterranean RF communication attenuation and waveguide model implemented in `src/layer1_robot_environment/communication_simulation/subterranean_rf_model.py`.
+  - Configurable `TunnelTopology` graph model computing waveguide path distance and detecting tunnel bends ($\ge 45^\circ$) for arbitrary mine layouts without hard-coded coordinates.
+  - Exact 2D rock wall ray-casting and 3D slab AABB intersection for subterranean obstacles (`_segments_intersect`, `_segment_intersects_aabb_3d`).
+  - Distance-dependent path loss, corner diffraction loss (18 dB/corner), obstacle shadow loss (12 dB), sigmoid packet loss rate, jittered latency, bandwidth shaping, and forced blackout mode.
+  - Interactive CLI link evaluation tool in `scripts/simulate_rf_attenuation.py` consuming dynamic parameters from `config/simulation/rf_attenuation_config.yaml`.
+  - Comprehensive unit test suite in `tests/unit/test_rf_attenuation.py` covering LOS straight corridors, 1 bend, 2 bends, wall obstruction, obstacle penetration/elevation clearances, and custom topologies.
+
+- **Milestone M6 Scope (Deferred / Planned)**:
+  - Gazebo C++ system plugin (`subterranean_rf_plugin.cc`).
+  - Real-time Linux kernel `tc`/`netem` packet filtering and live socket traffic shaping between active robot containers.
+  - Runtime ROS 2 service `/sim/inject_network_fault` integrated with live ROS 2 communications stack.
 
 ## 16. References
 - [Underground Mine Wireless Propagation Studies (NIOSH)](https://www.cdc.gov/niosh/mining)

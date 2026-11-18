@@ -29,7 +29,7 @@ This backlog tracks all engineering activities across the 14 project milestones 
 - [x] `TASK-M1-002`: Author procedural mine tunnel generation script with customizable cross-sections. (Priority: P1, Status: DONE)
 - [x] `TASK-M1-003`: Model terrain roughness, mud patches, and 15-degree incline ramps in SDF. (Priority: P1, Status: DONE)
 - [x] `TASK-M1-004`: Model physical mine obstacles (fallen rock piles, timber roof supports, standing water). (Priority: P1, Status: DONE)
-- [x] `TASK-M1-005`: Implement Gazebo RF communication attenuation model simulating underground line-of-sight loss. (Priority: P2, Status: DONE)
+- [ ] `TASK-M1-005`: Implement subterranean RF communication attenuation and waveguide model. (Priority: P2, Status: IN_PROGRESS - Analytical model & evaluator implemented in Python; Gazebo C++ plugin deferred to M6)
 
 ---
 

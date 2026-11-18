@@ -2,13 +2,22 @@
 """
 Dedicated Milestone M1 Mine Simulation Launch Entry Point
 Launches Gazebo Sim with the subterranean mine world without spawning robots.
-Configures GZ_SIM_RESOURCE_PATH, physics parameters, and clock bridge.
+Configures GZ_SIM_RESOURCE_PATH, physics parameters, and ROS-Gazebo /clock parameter bridge.
+Ensures coordinated startup and clean shutdown between Gazebo Sim and the ROS bridge.
 """
 
 import os
 from pathlib import Path
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
+from launch.actions import (
+    DeclareLaunchArgument,
+    EmitEvent,
+    ExecuteProcess,
+    RegisterEventHandler,
+    SetEnvironmentVariable,
+)
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
@@ -32,6 +41,12 @@ def generate_launch_description():
         "world",
         default_value=str(world_path),
         description="Full path to subterranean mine world SDF file",
+    )
+
+    bridge_clock_arg = DeclareLaunchArgument(
+        "bridge_clock",
+        default_value="true",
+        description="Start the ROS-Gazebo clock parameter bridge (/clock)",
     )
 
     env_gz_resource = SetEnvironmentVariable("GZ_SIM_RESOURCE_PATH", resource_path)
@@ -61,11 +76,22 @@ def generate_launch_description():
         shell=False,
     )
 
+    # Ensure entire launch (including bridge) shuts down when Gazebo exits
+    shutdown_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gz_sim_process,
+            on_exit=[EmitEvent(event=Shutdown(reason="Gazebo Sim process terminated"))],
+        )
+    )
+
     return LaunchDescription([
         headless_arg,
         world_arg,
+        bridge_clock_arg,
         env_gz_resource,
         env_sdf_path,
         env_gz_log,
         gz_sim_process,
+        clock_bridge_process,
+        shutdown_handler,
     ])

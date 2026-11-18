@@ -199,22 +199,47 @@ def test_assembled_world_ramp_and_upper_drift_connectivity():
         f"Horizontal gap between ramp end ({ramp_world_end_x:.2f}m) and upper floor start ({upper_floor_start_x:.2f}m)"
     )
 
-    # 4. Continuous Wall and Ceiling Alignment
-    # Left wall inner face: y = 1.95 - 0.4/2 = 1.75m
+    # 4. Continuous Wall and Ceiling Alignment Across Lower Drift, Ramp, and Upper Drift
+    ramp_l_wall = ramp_tree.find(".//link[@name='ramp_left_wall']")
+    ramp_r_wall = ramp_tree.find(".//link[@name='ramp_right_wall']")
+    ramp_ceil = ramp_tree.find(".//link[@name='ramp_ceiling']")
+    assert ramp_l_wall is not None, "ramp_left_wall missing from ramp model"
+    assert ramp_r_wall is not None, "ramp_right_wall missing from ramp model"
+    assert ramp_ceil is not None, "ramp_ceiling missing from ramp model"
+
+    # Left wall inner face: y = 1.95 - 0.4/2 = 1.75m (Lower, Ramp, and Upper must align)
     lower_l_wall = lower_drift.find(".//link[@name='left_wall']")
     upper_l_wall = upper_drift.find(".//link[@name='upper_left_wall']")
     assert lower_l_wall is not None and upper_l_wall is not None
     assert math.isclose(float(lower_l_wall.find("pose").text.split()[1]), 1.95, abs_tol=1e-3)
+    assert math.isclose(float(ramp_l_wall.find("pose").text.split()[1]), 1.95, abs_tol=1e-3)
     assert math.isclose(float(upper_l_wall.find("pose").text.split()[1]), 1.95, abs_tol=1e-3)
 
-    # Right wall inner face: y = -1.95 + 0.4/2 = -1.75m
+    # Right wall inner face: y = -1.95 + 0.4/2 = -1.75m (Lower, Ramp, and Upper must align)
     lower_r_wall = lower_drift.find(".//link[@name='right_wall']")
     upper_r_wall = upper_drift.find(".//link[@name='upper_right_wall']")
     assert lower_r_wall is not None and upper_r_wall is not None
     assert math.isclose(float(lower_r_wall.find("pose").text.split()[1]), -1.95, abs_tol=1e-3)
+    assert math.isclose(float(ramp_r_wall.find("pose").text.split()[1]), -1.95, abs_tol=1e-3)
     assert math.isclose(float(upper_r_wall.find("pose").text.split()[1]), -1.95, abs_tol=1e-3)
 
+    # Ramp ceiling internal vertical clearance
+    rc_pose = [float(v) for v in ramp_ceil.find("pose").text.split()]
+    rc_size = [float(v) for v in ramp_ceil.find(".//geometry/box/size").text.split()]
+    ramp_normal_clearance = (rc_pose[2] - rc_size[2] / 2.0) - (rf_pose[2] + rf_size[2] / 2.0)
+    assert math.isclose(ramp_normal_clearance, 3.0, abs_tol=0.05), (
+        f"Ramp normal ceiling clearance {ramp_normal_clearance:.3f}m is not 3.0m"
+    )
+
     # Ceiling clearance continuity:
+    # Lower ceiling bottom: lower_floor_top_z + 3.0m = 3.0m
+    lower_ceil = lower_drift.find(".//link[@name='ceiling']")
+    assert lower_ceil is not None
+    lc_pose = [float(v) for v in lower_ceil.find("pose").text.split()]
+    lc_size = [float(v) for v in lower_ceil.find(".//geometry/box/size").text.split()]
+    lc_bottom_z = lc_pose[2] - lc_size[2] / 2.0
+    assert math.isclose(lc_bottom_z, lower_floor_top_z + 3.0, abs_tol=0.05)
+
     # Upper ceiling bottom: uf_pose_z + 3.0m clearance = 3.215 + 3.0 = 6.215m
     upper_ceil = upper_drift.find(".//link[@name='upper_ceiling']")
     uc_pose = [float(v) for v in upper_ceil.find("pose").text.split()]
