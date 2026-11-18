@@ -88,7 +88,8 @@ The repository is organized into distinct, modular functional trees:
 | `docs/06_interfaces_and_protocols/` | Interface contracts, ROS 2 IDLs, JSON schemas, protocol specs | [Interfaces](docs/06_interfaces_and_protocols/README.md) |
 | `docs/07_development_standards/` | Developer environment setup, coding standards, build workflows, git rules | [Development](docs/07_development_standards/DEVELOPMENT_SETUP.md) |
 | `docs/08_testing_and_validation/` | Verification strategy, unit, integration, simulation, fault injection tests | [Testing](docs/08_testing_and_validation/TEST_STRATEGY.md) |
-| `docs/09_roadmap_and_management/` | Milestones M0 through M11, actionable task backlog, architectural changelog | [Roadmap](docs/09_roadmap_and_management/DEVELOPMENT_ROADMAP.md) |
+| `docs/09_roadmap/` | Milestones M0 through M13, actionable task backlog, architectural changelog | [Roadmap](docs/09_roadmap/DEVELOPMENT_ROADMAP.md) |
+| `docs/10_architecture_decision_records/` | Formal Architectural Decision Records (ADR-001 through ADR-006) | [ADRs](docs/10_architecture_decision_records/README.md) |
 | `docs/11_technology_references/` | Formal technical investigations of 13 open-source foundational libraries | [Tech References](docs/11_technology_references/README.md) |
 
 ---

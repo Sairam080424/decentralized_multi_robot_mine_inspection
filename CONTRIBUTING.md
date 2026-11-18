@@ -18,8 +18,8 @@ Welcome to the **Decentralized Multi-Robot Mine Inspection Platform**. This docu
 ## 2. Solo Founder Governance & Review Model
 
 As the project scales from a solo founder to multiple independent contributors:
-- **Principal Systems Architect (Founder)**: Holds sole merge authority on `develop` and `main` branches.
-- **Branch Protection**: Direct pushes to `main` and `develop` are strictly prohibited. All changes must arrive via Pull Request.
+- **Principal Systems Architect (Founder)**: Holds sole merge authority on the `main` branch.
+- **Branch Protection**: Direct pushes to `main` are strictly prohibited. All changes must arrive via Pull Request.
 - **Single Approver Gate**: Every Pull Request requires explicit review and approval by the Founder using the [Code Review Checklist](docs/07_development_standards/CODE_REVIEW_CHECKLIST.md).
 - **Module Assignment**: Incoming contributors must be assigned a module using the [Module Assignment Template](docs/07_development_standards/MODULE_ASSIGNMENT_TEMPLATE.md) and adhere to the [Module Ownership Matrix](docs/07_development_standards/MODULE_OWNERSHIP_AND_INTERFACES.md).
 
@@ -27,20 +27,24 @@ As the project scales from a solo founder to multiple independent contributors:
 
 ## 3. Git Workflow & Branching Strategy
 
+Our agreed Git workflow maintains a clean, linear, and strictly verified repository history:
+- **`main`**: Stable reviewed integration branch representing verified milestones and production-ready code.
+- **Feature branches**: Individual development branches branched directly from `main`.
+- **Pull Requests (PRs)**: All PRs target `main` directly.
+
 ```mermaid
 flowchart LR
-    A["main (v0.1.0-M0)"] --> B["develop"]
-    B --> C["feature/mod-1.1-mine-world"]
-    C -- "PR #1 (Code Review + CI)" --> B
-    B -- "Milestone Release" --> D["main (v0.2.0-M1)"]
+    A["main (stable reviewed integration)"] --> B["feature/mod-1.1-mine-world"]
+    A --> C["feature/m0-project-foundation"]
+    B -- "PR targeting main (CI + Review)" --> A
+    C -- "PR targeting main (CI + Review)" --> A
 ```
 
 ### Branch Naming Conventions
-- **`main`**: Production releases, verified milestone demonstrations only.
-- **`develop`**: Integration branch for verified feature sets.
-- **`feature/<module-id>-<description>`**: Scoped feature work (e.g., `feature/mod-1.1-tunnel-gen`, `feature/m0-project-foundation`).
-- **`fix/<issue-id>-<description>`**: Bug and hotfix branches.
-- **`docs/<topic>`**: Documentation and architectural enhancements.
+- **`main`**: Stable reviewed integration branch.
+- **`feature/<module-id>-<description>`**: Scoped feature work branched from `main` (e.g., `feature/mod-1.1-tunnel-gen`, `feature/m0-project-foundation`).
+- **`fix/<issue-id>-<description>`**: Bug and hotfix branches branched from `main`.
+- **`docs/<topic>`**: Documentation and architectural enhancements branched from `main`.
 
 ### Commit Conventions (Conventional Commits v1.0.0)
 All commit messages must strictly adhere to the [Conventional Commits](https://www.conventionalcommits.org/) format:
@@ -65,7 +69,7 @@ Allowed types:
 
 ## 4. Pull Request (PR) Process
 
-1. **Fork or Branch**: Create a feature branch from the latest `develop` branch.
+1. **Branch**: Create a feature branch from the latest `main` branch.
 2. **Implement & Test**: Write code within your assigned module directory. Ensure unit tests achieve >= 80% coverage.
 3. **Run Local Verification**:
    ```bash
@@ -77,9 +81,9 @@ Allowed types:
    black --check src/ tests/
    ament_flake8
    ```
-4. **Submit PR**: Open a PR targeting `develop` using the project's [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+4. **Submit PR**: Open a PR targeting `main` using the project's [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 5. **Founder Review**: The Founder reviews the PR against the [Code Review Checklist](docs/07_development_standards/CODE_REVIEW_CHECKLIST.md).
-6. **Rebase & Merge**: Once approved and CI passes, the PR is squash-merged or rebase-merged into `develop`.
+6. **Rebase & Merge**: Once approved and CI passes, the PR is squash-merged or rebase-merged into `main`.
 
 ---
 

@@ -31,10 +31,11 @@ stateDiagram-v2
 
 ## 6. Functional Requirements
 - **REQ-2.5-003**: Coordinator election shall converge within `[PROPOSED TARGET: < 300 ms]` in a 2-robot network.
-- **REQ-2.5-004**: Coordinator tenure shall be bounded by a maximum lease of 60 seconds unless renewed by consensus.
+- **REQ-2.5-004**: Coordinator tenure shall be bounded by a maximum lease of `[PROPOSED TARGET: 60 seconds]` unless renewed by cluster consensus.
+- **REQ-2.5-005**: If the elected coordinator ceases broadcasting heartbeats for `[PROPOSED TARGET: > 1.0 s]`, peers shall declare coordinator failure and trigger an immediate re-election under an incremented term epoch.
 
 ## 7. Technical Approach
-Deploy a modified Bully algorithm optimized for small mobile networks ($N \le 10$). The robot with the highest operational score ($S = w_b \cdot SoC + w_c \cdot Compute$) or lowest deterministic UUID becomes the temporary coordinator for that specific epoch.
+Deploy a modified Bully algorithm optimized for small mobile networks ($N \le 10$) with Raft-style term epochs. The temporary coordinator must broadcast a heartbeat beacon at `[PROPOSED TARGET: 5 Hz]`. The robot with the highest operational score ($S = w_b \cdot SoC + w_c \cdot Compute$) or lowest deterministic UUID becomes the temporary coordinator for that specific epoch. If the coordinator drops offline or crashes, the $\phi$-accrual failure detector expires the lease, increments `term_epoch = epoch + 1`, and triggers a new election.
 
 ## 8. Open-Source Resources
 ### Raft Consensus Algorithm Concepts

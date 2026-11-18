@@ -12,14 +12,14 @@
 
 ## 2. Quantitative Performance Targets (Proposed)
 
-> [!NOTE]
-> All quantitative metrics below are proposed design objectives to be verified in simulation during Milestone M10.
+> [!IMPORTANT]
+> **Verification Status**: All quantitative metrics below represent **PROPOSED DESIGN TARGETS** formulated in Milestone M0. As of Milestone M0, all performance metrics are **UNVERIFIED** pending empirical evaluation during milestone testing.
 
-| Metric Identifier | Parameter | Proposed Target | Validation Method |
-|---|---|---|---|
-| `METRIC-PERF-001` | P2P Peer Discovery Time | < 2.0 s upon entering RF range | Simulated Wi-Fi loss/reconnect test |
-| `METRIC-PERF-002` | Distributed Task Auction Clearance | < 500 ms (2 robots, 10 tasks) | Benchmark timing logger |
-| `METRIC-PERF-003` | State Reconciliation Latency | < 1.0 s for 100 state mutations | Delta-CRDT exchange benchmark |
-| `METRIC-PERF-004` | Local Safety Stop Reflex Reaction | < 50 ms from obstacle detection | Hardware-in-the-loop safety timer |
-| `METRIC-PERF-005` | Task Reallocation Latency on Peer Failure | < 8.0 s after lease expiration | Fault-injection crash test |
-| `METRIC-PERF-006` | Narrow Tunnel Deconfliction Convergence | < 3.0 s negotiation time | Tunnel meeting scenario test |
+| Metric Identifier | Parameter | Proposed Design Target | Verification Status | Validation Method |
+|---|---|---|---|---|
+| `METRIC-PERF-001` | P2P Peer Discovery Time | < 2.0 s upon entering RF range | UNVERIFIED (Pending M4) | Simulated Wi-Fi loss/reconnect test |
+| `METRIC-PERF-002` | Distributed Task Auction Clearance | < 500 ms (2 robots, 10 tasks) | UNVERIFIED (Pending M8) | Benchmark timing logger |
+| `METRIC-PERF-003` | State Reconciliation Latency | < 1.0 s for 100 state mutations | UNVERIFIED (Pending M6) | Delta-CRDT exchange benchmark |
+| `METRIC-PERF-004` | Local Safety Stop Reflex Reaction | < 50 ms from obstacle detection | UNVERIFIED (Pending M3) | Hardware-in-the-loop safety timer |
+| `METRIC-PERF-005` | Task Reallocation Latency on Peer Failure | < 8.0 s after lease expiration | UNVERIFIED (Pending M8) | Fault-injection crash test |
+| `METRIC-PERF-006` | Narrow Tunnel Deconfliction Convergence | < 3.0 s negotiation time | UNVERIFIED (Pending M7) | Tunnel meeting scenario test |

@@ -1,10 +1,18 @@
 # ADR-003: Eclipse Zenoh for Distributed P2P Mesh Communication
 
-- **Status**: ACCEPTED (PROPOSED baseline for verification)
-- **Date**: 2026-11-18
+- **Status**: PROPOSED / UNDER EVALUATION
+- **Date**: 2026-11-18 (Updated: 2026-11-19)
 - **Context**: Standard ROS 2 CycloneDDS/FastDDS discovery produces high multicast discovery traffic that floods low-bandwidth, high-jitter subterranean wireless mesh radios.
-- **Decision**: Adopt Eclipse Zenoh as the peer-to-peer transport protocol for Layer 2 inter-robot communication, while retaining standard ROS 2 DDS for intra-robot communication within Layer 1.
+- **Decision**: Propose Eclipse Zenoh as candidate peer-to-peer transport protocol for Layer 2 inter-robot communication, while retaining standard ROS 2 DDS for intra-robot communication within Layer 1.
+- **Evaluation Criteria & Alternatives**:
+  - **Status**: Under active architectural evaluation; not a final binding decision.
+  - **Alternatives Considered**: Native CycloneDDS with unicast discovery, FastDDS Discovery Server, and ZeroMQ/protobuf ad-hoc gossip.
+  - **Empirical Evaluation Plan (Milestone M4 & M7)**:
+    - Measure discovery time ($< 2.0\text{ s}$ target) and link wire overhead ($< 5\text{ bytes}$ header claim).
+    - Benchmark peer recovery latency after subterranean partition reconnection.
+    - Measure CPU and memory footprint on resource-constrained embedded robot compute.
 - **Consequences**:
-  - Wire overhead reduced to < 5 bytes header.
+  - Wire overhead projected to be $< 5\text{ bytes}$ header.
   - Native support for ad-hoc routing and network partitions.
-  - Requires deploying `zenoh-bridge-dds` or direct Zenoh client libraries.
+  - Requires maintaining `zenoh-bridge-dds` or direct Zenoh C/C++ client wrappers.
+  - Final adoption decision contingent upon empirical network profiling in Milestone M4.

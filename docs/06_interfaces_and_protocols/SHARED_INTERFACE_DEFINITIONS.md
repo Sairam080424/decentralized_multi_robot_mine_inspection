@@ -1,7 +1,14 @@
 # Shared Interface Definitions Specification
 
 ## 1. Overview & Architectural Role
-To ensure that multiple robotics and distributed systems developers can develop modules independently without causing integration conflicts, all cross-module and cross-layer interactions must strictly adhere to the standardized shared interfaces documented herein.
+To ensure that multiple robotics, perception, controls, and distributed systems developers can develop modules independently without causing integration conflicts, all cross-module and cross-layer interactions must strictly adhere to the standardized shared interfaces documented herein.
+
+Every interface defined in this repository has:
+1. **Exactly One Clear Owner**: The designated module lead responsible for schema changes and backward compatibility.
+2. **Defined Producers**: The explicit software components authorized to create and publish this data.
+3. **Defined Consumers**: The explicit software components authorized to subscribe, query, or ingest this data.
+4. **Strict Data Types**: Fully defined primitive types, message fields, and schemas.
+5. **Formal Versioning Rules**: Explicit Semantic Versioning (SemVer) guidelines and breaking change deprecation procedures.
 
 These interfaces are currently **PROPOSED** specifications subject to empirical verification during milestone integration testing.
 
@@ -9,125 +16,222 @@ These interfaces are currently **PROPOSED** specifications subject to empirical 
 
 ## 2. Shared Interface Catalog
 
-### 2.1 Interface: `RobotState`
+### 2.1 Interface: `RobotTelemetry` (`interfaces/msg/RobotTelemetry.msg`)
 - **Purpose**: Represents the real-time kinematic, physical, and operational state of an individual robot.
-- **Data Fields & Types**:
-  - `header` (`std_msgs/Header`): Monotonic timestamp and coordinate frame reference (`map` or `odom`).
-  - `robot_id` (`string`): UUIDv4 string uniquely identifying the platform.
-  - `archetype` (`string`): Categorization (`EXPLORATION_SCOUT` or `INSPECTION_SPECIALIST`).
-  - `pose` (`geometry_msgs/PoseWithCovariance`): Estimated 3D Cartesian position and quaternion orientation with covariance matrix.
-  - `velocity` (`geometry_msgs/Twist`): Current linear and angular velocities ($v_x, v_y, v_z, \omega_x, \omega_y, \omega_z$).
-  - `battery_soc_percent` (`float32`): Battery state-of-charge percentage (0.0 to 100.0%).
-  - `fsm_state` (`string`): Active lifecycle state (`UNINITIALIZED`, `IDLE`, `READY`, `EXECUTING_TASK`, `PAUSED`, `FAULT`, `EMERGENCY_STOP`).
-  - `active_task_id` (`string`): UUIDv4 string of currently active task, or empty string if idle.
-- **Producer**: Module 1.5 Robot Agent / Module 1.6 State Publisher (running locally on each robot).
-- **Consumers**: Module 2.1 Discovery, Module 2.4 Task Allocation, Module 2.6 State Management, Module 3.4 Monitoring Dashboard.
-- **Ownership**: Module 1.5 (Robot Agent Team).
-- **Communication Mechanism**: Published locally via ROS 2 Topic `/robot_name/telemetry` at 5 Hz; bridged over Eclipse Zenoh as `mine/peers/{uuid}/telemetry`.
+- **Single Clear Owner**: Module 1.5 (Local Autonomy & Safety Lead).
+- **Defined Producers**: Module 1.5 Robot Agent / Module 1.6 State Publisher (running locally on each robot).
+- **Defined Consumers**: Module 2.1 Peer Discovery, Module 2.4 Distributed Task Allocation, Module 2.6 State Management, Module 3.4 Monitoring Dashboard.
+- **Data Types & Fields** (`interfaces/msg/RobotTelemetry.msg`):
+  - `std_msgs/Header header`: Monotonic timestamp and coordinate frame reference (`map` or `odom`).
+  - `string robot_id`: UUIDv4 string uniquely identifying the platform.
+  - `string archetype`: Categorization (`EXPLORATION_SCOUT` or `INSPECTION_SPECIALIST`).
+  - `geometry_msgs/PoseWithCovariance pose`: Estimated 3D Cartesian position and quaternion orientation with covariance matrix.
+  - `geometry_msgs/Twist velocity`: Current linear and angular velocities ($v_x, v_y, v_z, \omega_x, \omega_y, \omega_z$).
+  - `float32 battery_soc_percent`: Battery state-of-charge percentage (0.0 to 100.0%).
+  - `string fsm_state`: Active lifecycle state (`UNINITIALIZED`, `IDLE`, `READY`, `EXECUTING_TASK`, `PAUSED`, `FAULT`, `EMERGENCY_STOP`).
+  - `string active_task_id`: UUIDv4 string of currently active task, or empty string if idle.
+- **Communication Mechanism**: Published locally via ROS 2 Topic `/{robot_name}/telemetry` at 5 Hz; bridged over Eclipse Zenoh as `mine/peers/{uuid}/telemetry`.
 - **Validation Rules**:
   - `battery_soc_percent` must be between $0.0$ and $100.0$.
   - Pose covariance diagonal elements must be positive semi-definite.
-  - `robot_id` must match regex `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`.
-- **Versioning Considerations**: SemVer 1.0.0. Backwards-compatible field additions only; removal of existing fields requires an Architectural RFC.
+  - `robot_id` must conform to UUIDv4 regex `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0` (SemVer).
+  - Backwards-compatible additions: New optional fields may be appended at the end of the message definition with minor version bumps (`v1.1.0`).
+  - Breaking changes: Renaming, reordering, deleting fields, or modifying types requires a major version bump (`v2.0.0`), an approved Architectural RFC, and a 2-milestone deprecation cycle.
 
 ---
 
-### 2.2 Interface: `CapabilityProfile`
+### 2.2 Interface: `SafetyStatus` (`interfaces/msg/SafetyStatus.msg`)
+- **Purpose**: Exposes instantaneous hardware safety watchdog status, collision clearances, and tip-over diagnostics.
+- **Single Clear Owner**: Module 1.5 (Local Autonomy & Safety Lead).
+- **Defined Producers**: Module 1.5 Local Safety Manager (authoritative 50 Hz watchdog).
+- **Defined Consumers**: Module 1.4 Navigation & Motion (velocity override clamp), Module 1.6 Communication Interface, Module 3.4 Monitoring Dashboard.
+- **Data Types & Fields** (`interfaces/msg/SafetyStatus.msg`):
+  - `std_msgs/Header header`: Monotonic timestamp and base link frame.
+  - `bool override_active`: True if local safety reflex has overridden motion commands to zero velocity.
+  - `float32 min_obstacle_distance`: Minimum measured obstacle distance in meters from LiDAR/depth sensors.
+  - `float32 roll_deg`: Current chassis roll inclination in degrees.
+  - `float32 pitch_deg`: Current chassis pitch inclination in degrees.
+  - `string fault_reason`: Diagnostic description (`NONE`, `OBSTACLE_ENVELOPE_BREACH`, `EXCESSIVE_TILT`, `HEARTBEAT_TIMEOUT`).
+- **Communication Mechanism**: Published locally via ROS 2 Topic `/{robot_name}/safety/status` at 50 Hz.
+- **Validation Rules**:
+  - `min_obstacle_distance >= 0.0`.
+  - `roll_deg` and `pitch_deg` within $[-180.0, +180.0]$.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Additive diagnostic fields permitted in minor releases. Modifying existing field definitions requires major version increment and Technical Founder approval.
+
+---
+
+### 2.3 Interface: `CapabilityProfile` (`interfaces/schemas/capability_schema.json`)
 - **Purpose**: Formally declares the physical locomotion capabilities, installed sensor payloads, allowable actions, and dynamic resource limits of a robot.
-- **Data Fields & Types**:
-  - `robot_id` (`string`): UUIDv4 string of the declaring robot.
+- **Single Clear Owner**: Module 2.2 (Capability Management Lead).
+- **Defined Producers**: Module 2.2 Capability Model (with Module 1.5 local hardware introspection).
+- **Defined Consumers**: Module 2.4 Distributed Task Allocation (Constraint Matcher), Module 3.1 Mission Planning Studio.
+- **Data Types & Fields** (`interfaces/schemas/capability_schema.json`):
+  - `robot_id` (`string`, UUIDv4): Unique robot identifier.
   - `archetype` (`string`): `EXPLORATION_SCOUT` or `INSPECTION_SPECIALIST`.
   - `locomotion` (`object`):
     - `type` (`string`): `DIFFERENTIAL_DRIVE`, `TRACKED_SKID_STEER`, or `LEGGED`.
-    - `max_linear_speed_mps` (`float32`): Maximum velocity in meters per second.
-    - `max_incline_deg` (`float32`): Maximum slope negotiable in degrees.
-    - `obstacle_clearance_m` (`float32`): Maximum step height clearance in meters.
-  - `sensors` (`string[]`): Array of active sensor modalities (`LIDAR_3D`, `RGB_OPTICAL`, `RADIOMETRIC_THERMAL`, `IMU_6DOF`, `GAS_DETECTOR`).
-  - `certified_actions` (`string[]`): Array of supported high-level tasks (`EXPLORE_FRONTIER`, `NAVIGATE_WAYPOINT`, `INSPECT_THERMAL`, `INSPECT_VISUAL`, `RENDEZVOUS`).
-  - `resource_headroom` (`object`): Minimum battery reserve threshold (e.g. 20%) and storage capacity.
-- **Producer**: Module 1.5 Robot Agent / Module 2.2 Capability Management.
-- **Consumers**: Module 2.4 Task Allocation (Constraint Matcher), Module 3.1 Mission Planning Studio.
-- **Ownership**: Module 2.2 (Capability Management Team).
+    - `max_linear_speed_mps` (`number`): Maximum velocity in meters per second.
+    - `max_incline_deg` (`number`): Maximum slope negotiable in degrees.
+    - `obstacle_clearance_m` (`number`): Maximum step height clearance in meters.
+  - `sensors` (`array of strings`): Active sensor modalities (`LIDAR_3D`, `RGB_OPTICAL`, `RADIOMETRIC_THERMAL`, `IMU_6DOF`, `GAS_DETECTOR`).
+  - `certified_actions` (`array of strings`): Supported high-level tasks (`EXPLORE_FRONTIER`, `NAVIGATE_WAYPOINT`, `INSPECT_THERMAL`, `INSPECT_VISUAL`, `RENDEZVOUS`).
+  - `resource_headroom` (`object`): Minimum battery reserve threshold percentage and storage capacity.
 - **Communication Mechanism**: Zenoh Queryable on `mine/peers/{uuid}/capabilities` with local TTL caching.
-- **Validation Rules**: Validated against JSON Schema `interfaces/schemas/capability_schema.json`.
-- **Versioning Considerations**: Dynamic capabilities (e.g., sensor failure) publish delta updates removing the defective modality without changing schema version.
+- **Validation Rules**: Validated strictly against JSON Schema Draft-07 (`interfaces/schemas/capability_schema.json`).
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Additive optional properties permitted under `v1.x`. Changes to required properties or allowed enum values require a major schema version bump (`v2.0.0`).
 
 ---
 
-### 2.3 Interface: `TaskDefinition`
+### 2.4 Interface: `TaskDefinition` (`interfaces/schemas/task_schema.json`)
 - **Purpose**: Defines an atomic, independently actionable, and verifiable unit of work within a mission DAG.
-- **Data Fields & Types**:
-  - `task_id` (`string`): UUIDv4 unique task identifier.
+- **Single Clear Owner**: Module 2.3 (Mission & Task Management Lead).
+- **Defined Producers**: Module 2.3 Mission & Task Management (DAG decomposition) / Module 3.1 Mission Planning.
+- **Defined Consumers**: Module 2.4 Distributed Task Allocation, Module 1.5 Robot Agent (`ExecuteTask.action` server).
+- **Data Types & Fields** (`interfaces/schemas/task_schema.json`):
+  - `task_id` (`string`, UUIDv4): Unique task identifier.
   - `task_type` (`string`): `EXPLORE_FRONTIER`, `NAVIGATE_WAYPOINT`, `INSPECT_THERMAL`, `INSPECT_VISUAL`, or `RENDEZVOUS`.
-  - `target_pose` (`geometry_msgs/PoseStamped`): 3D Cartesian coordinates and desired sensor orientation.
-  - `required_sensors` (`string[]`): Modalities required to complete the task (e.g. `["RADIOMETRIC_THERMAL"]`).
-  - `priority` (`uint8`): Priority tier from 1 (Emergency) to 100 (Exploration).
-  - `dwell_time_sec` (`float32`): Required observation duration at target waypoint.
-  - `arrival_tolerance_m` (`float32`): Spatial acceptance radius (default 0.3m).
-  - `prerequisite_task_ids` (`string[]`): List of task UUIDs that must reach `COMPLETED` before this task can be auctioned.
-- **Producer**: Module 2.3 Mission & Task Management (via DAG decomposition) or Module 3.1 Mission Planning.
-- **Consumers**: Module 2.4 Task Allocation, Module 1.5 Robot Agent (ExecuteTask action server).
-- **Ownership**: Module 2.3 (Task Management Team).
-- **Communication Mechanism**: Embedded inside mission DAG payloads; announced over Zenoh topic `mine/auctions/{task_id}/announce`.
-- **Validation Rules**: Validated against JSON Schema `interfaces/schemas/task_schema.json`. Coordinate positions must fall within mine boundary polygon.
-- **Versioning Considerations**: Compatible extensions may add optional sensor tuning parameters (e.g., thermal emissivity factor).
+  - `target_pose` (`object`): 3D Cartesian coordinates (`x, y, z`) and orientation quaternion (`x, y, z, w`).
+  - `required_sensors` (`array of strings`): Modalities required to complete the task (e.g. `["RADIOMETRIC_THERMAL"]`).
+  - `priority` (`integer`, 1 to 100): Priority tier where 1 is highest emergency and 100 is background exploration.
+  - `dwell_time_sec` (`number`): Required observation duration at target waypoint.
+  - `arrival_tolerance_m` (`number`): Spatial acceptance radius (default 0.3m).
+  - `prerequisite_task_ids` (`array of strings`): Task UUIDs that must complete before this task can be auctioned.
+- **Communication Mechanism**: Embedded in mission DAG payloads; announced over Zenoh topic `mine/auctions/{task_id}/announce`.
+- **Validation Rules**: Validated against JSON Schema Draft-07 (`interfaces/schemas/task_schema.json`). Coordinates must lie within surveyed mine operational boundaries.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - New optional parameters (e.g. custom sensor exposure time) may be added in minor versions. Modifications to task type enums require major version bump.
 
 ---
 
-### 2.4 Interface: `TaskAssignment`
+### 2.5 Interface: `TaskAssignment` (`interfaces/msg/TaskAssignment.msg`)
 - **Purpose**: Formal contract granting a specific robot exclusive authority to execute a designated task under a time-bounded lease.
-- **Data Fields & Types**:
-  - `task_id` (`string`): UUIDv4 of the assigned task.
-  - `assigned_robot_id` (`string`): UUIDv4 of the winning bidder.
-  - `lease_token` (`string`): Cryptographic token authorizing execution.
-  - `lease_granted_epoch_ms` (`uint64`): Timestamp when lease was issued.
-  - `lease_expiration_epoch_ms` (`uint64`): Timestamp when lease expires unless renewed.
-  - `agreed_cost` (`float32`): Winning bid cost recorded for audit.
-- **Producer**: Module 2.4 Distributed Task Allocation (Auction Clearing House).
-- **Consumers**: Winning robot's Module 2.8 Gateway and Module 1.5 Action Server; peer lease registries.
-- **Ownership**: Module 2.4 (Task Allocation Team).
-- **Communication Mechanism**: Zenoh Topic `mine/auctions/{task_id}/lease`; ROS 2 Topic `/robot_name/task_command`.
+- **Single Clear Owner**: Module 2.4 (Distributed Task Allocation Lead).
+- **Defined Producers**: Module 2.4 Distributed Task Allocation (Auctioneer Node).
+- **Defined Consumers**: Module 1.5 Robot Agent (ExecuteTask action server), Module 2.6 Distributed State Management (CRDT lease registry), Module 2.7 Fault Tolerance.
+- **Data Types & Fields** (`interfaces/msg/TaskAssignment.msg`):
+  - `string task_id`: UUIDv4 of the assigned task.
+  - `string task_type`: Task category matching `task_schema.json`.
+  - `string assigned_robot_id`: UUIDv4 of the winning bidder.
+  - `geometry_msgs/PoseStamped target_pose`: Spatial waypoint.
+  - `string lease_token`: Cryptographic lease token authorizing execution.
+  - `uint64 lease_expiration_epoch_ms`: Monotonic millisecond timestamp when lease expires unless renewed.
+- **Communication Mechanism**: Zenoh Topic `mine/auctions/{task_id}/lease`; ROS 2 Topic `/{robot_name}/task_command`.
 - **Validation Rules**:
-  - `lease_expiration_epoch_ms` must be greater than `lease_granted_epoch_ms`.
-  - `lease_token` signature must verify against auctioneer public key.
-- **Versioning Considerations**: If lease renewal mechanism is upgraded, token header must encode protocol version.
+  - `lease_expiration_epoch_ms` must be strictly greater than current cluster epoch.
+  - `assigned_robot_id` must match a known active peer in the discovery roster.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Lease token signing algorithm updates require protocol negotiation; breaking format changes require major version increment.
 
 ---
 
-### 2.5 Interface: `TaskResult`
-- **Purpose**: Encapsulates the verified outcome, sensor evidence references, and performance metrics of a finished task.
-- **Data Fields & Types**:
-  - `task_id` (`string`): UUIDv4 of the completed task.
-  - `executing_robot_id` (`string`): UUIDv4 of the robot that performed the task.
-  - `status_code` (`uint8`): `0=STATUS_SUCCESS`, `1=STATUS_SAFETY_ABORT`, `2=STATUS_TIMEOUT`, `3=STATUS_STALLED`.
-  - `completion_timestamp` (`uint64`): Monotonic timestamp of completion.
-  - `evidence_uris` (`string[]`): URIs pointing to stored visual images, radiometric HDF5 files, or point clouds.
-  - `peak_temperature_celsius` (`float32`): Peak measured temperature (applicable for thermal tasks).
-  - `anomaly_flag` (`bool`): True if measured value exceeded asset critical threshold.
-  - `failure_error_code` (`uint16`): Standardized 16-bit error code (0x0000 on success).
-- **Producer**: Module 1.5 Robot Agent / Module 2.8 Runtime Gateway.
-- **Consumers**: Module 2.3 Task Management (Dependency unblocking), Module 2.6 State Engine (CRDT commit), Module 3.3 Inspection Management.
-- **Ownership**: Module 1.5 / Module 2.8.
-- **Communication Mechanism**: ROS 2 Action Result `ExecuteTask.action`; Zenoh event `mine/events/task/completed`.
-- **Validation Rules**: If `status_code == 0`, `evidence_uris` must not be empty for inspection tasks.
-- **Versioning Considerations**: New sensory measurement summaries can be appended as optional fields.
+### 2.6 Interface: `ExecuteTask` Action (`interfaces/action/ExecuteTask.action`)
+- **Purpose**: Standardized ROS 2 Action interface between Layer 2 autonomy and Layer 1 robot agent for executing high-level tasks.
+- **Single Clear Owner**: Module 1.5 (Local Autonomy & Safety Lead).
+- **Defined Producers**: Module 2.8 Distributed Runtime Gateway (Action Client).
+- **Defined Consumers**: Module 1.5 Robot Agent (Action Server).
+- **Data Types & Fields** (`interfaces/action/ExecuteTask.action`):
+  - **Goal**:
+    - `string task_id`: Unique task UUID.
+    - `string task_type`: Work category.
+    - `geometry_msgs/PoseStamped target_pose`: Destination pose.
+    - `string[] required_sensors`: Sensor modality constraints.
+    - `float32 dwell_time_sec`: Observation duration.
+    - `string lease_token`: Active lease authorization token.
+  - **Result**:
+    - `uint8 STATUS_SUCCESS = 0`
+    - `uint8 STATUS_SAFETY_ABORT = 1`
+    - `uint8 STATUS_TIMEOUT = 2`
+    - `uint8 STATUS_STALLED = 3`
+    - `uint8 status_code`: Execution termination status.
+    - `string evidence_uri`: URI path to captured inspection artifacts.
+    - `string message`: Human-readable completion or failure diagnostic.
+  - **Feedback**:
+    - `float32 percent_complete`: Progress percentage (0.0 to 100.0%).
+    - `float32 distance_remaining`: Metric distance to target waypoint.
+    - `builtin_interfaces/Duration time_elapsed`: Elapsed execution duration.
+    - `string current_substate`: Lifecycle sub-state (`NAVIGATING`, `DWELLING`, `INSPECTING`).
+- **Communication Mechanism**: ROS 2 Action client-server over intra-robot DDS (`/{robot_name}/execute_task`).
+- **Validation Rules**: Goals rejected if `lease_token` is missing or expired, or if target coordinates are outside Nav2 costmap limits.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Result status codes are strictly append-only. Modifying numeric values of existing codes is prohibited.
 
 ---
 
-### 2.6 Interface: `MissionStatus`
+### 2.7 Interface: `ExecuteInspectionTask` Action (`interfaces/action/ExecuteInspectionTask.action`)
+- **Purpose**: Specialized inspection action interface for targeted optical and radiometric thermal data collection.
+- **Single Clear Owner**: Module 1.5 (Local Autonomy & Safety Lead).
+- **Defined Producers**: Module 2.8 Distributed Runtime Gateway (Action Client).
+- **Defined Consumers**: Module 1.5 Robot Agent (Robot B Inspection Specialist Server).
+- **Data Types & Fields** (`interfaces/action/ExecuteInspectionTask.action`):
+  - **Goal**:
+    - `string task_id`: Task UUID.
+    - `string asset_id`: Asset identifier (e.g. `PUMP_STATION_04`).
+    - `geometry_msgs/PoseStamped target_pose`: Robot inspection vantage point.
+    - `float32 pan_angle_deg`: Sensor pan gimbal angle.
+    - `float32 tilt_angle_deg`: Sensor tilt gimbal angle.
+    - `bool capture_thermal`: True to capture radiometric thermal matrix.
+    - `bool capture_rgb`: True to capture high-definition optical frame.
+  - **Result**:
+    - `uint8 status_code`: Success/failure status.
+    - `float32 peak_temperature_celsius`: Maximum detected temperature in target bounding region.
+    - `bool anomaly_detected`: True if thermal threshold exceeded.
+    - `string evidence_uri`: Storage path of captured radiometric file.
+  - **Feedback**:
+    - `float32 percent_complete`: Progress percentage.
+    - `string status_message`: Inspection diagnostic.
+- **Communication Mechanism**: ROS 2 Action client-server over intra-robot DDS (`/{robot_name}/execute_inspection`).
+- **Validation Rules**: `pan_angle_deg` and `tilt_angle_deg` clamped within hardware gimbal limits ($[-90^\circ, +90^\circ]$).
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Additive feedback parameters permitted under minor releases.
+
+---
+
+### 2.8 Interface: `SubmitTask` Service (`interfaces/srv/SubmitTask.srv`)
+- **Purpose**: Synchronous service for external operators or surface planning systems to inject ad-hoc inspection tasks into the autonomy cluster.
+- **Single Clear Owner**: Module 2.8 (Distributed Runtime Interface Lead).
+- **Defined Producers**: Module 3.2 Mission Management / External SDK Client.
+- **Defined Consumers**: Module 2.3 Mission & Task Management (via Module 2.8 Runtime Gateway).
+- **Data Types & Fields** (`interfaces/srv/SubmitTask.srv`):
+  - **Request**:
+    - `string task_id`: UUIDv4 string.
+    - `string task_json`: JSON-serialized task matching `task_schema.json`.
+  - **Response**:
+    - `bool accepted`: True if task schema validated and task queued for auction.
+    - `string message`: Validation diagnostic or error explanation.
+- **Communication Mechanism**: ROS 2 Service `/{robot_name}/submit_task` or Zenoh Queryable `mine/tasks/submit`.
+- **Validation Rules**: Request `task_json` must pass validation against `interfaces/schemas/task_schema.json`.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Service request/response signature is immutable without major version bump.
+
+---
+
+### 2.9 Interface: `MissionStatus` (`interfaces/schemas/mission_schema.json`)
 - **Purpose**: Provides aggregate cluster-wide situational awareness regarding overall mission progress, asset scorecards, and fleet status.
-- **Data Fields & Types**:
-  - `mission_id` (`string`): UUIDv4 of the active mission.
+- **Single Clear Owner**: Module 3.2 (Mission Management Lead).
+- **Defined Producers**: Module 3.2 Mission Management (Progress Aggregator).
+- **Defined Consumers**: Module 3.4 Monitoring & Visualization (Web Dashboard), Enterprise API clients.
+- **Data Types & Fields** (`interfaces/schemas/mission_schema.json`):
+  - `mission_id` (`string`, UUIDv4): Active mission identifier.
   - `top_level_status` (`string`): `DRAFT`, `VALIDATED`, `SUBMITTED`, `IN_PROGRESS`, `PAUSED`, `ABORTED`, `COMPLETED`.
-  - `total_tasks` (`uint32`): Total number of atomic tasks in the mission DAG.
-  - `completed_tasks` (`uint32`): Count of successfully completed tasks.
-  - `failed_tasks` (`uint32`): Count of permanently failed tasks.
-  - `active_allocations` (`object[]`): Array of `{task_id, robot_id, start_time}` for currently executing tasks.
-  - `estimated_remaining_seconds` (`float32`): Critical-path projected completion time.
-  - `critical_hazards_detected` (`uint32`): Count of unmitigated high-priority hazard alerts.
-- **Producer**: Module 3.2 Mission Management (Progress Aggregator).
-- **Consumers**: Module 3.4 Monitoring & Visualization (Web Dashboard), Enterprise API clients.
-- **Ownership**: Module 3.2 (Mission Management Team).
+  - `total_tasks` (`integer`): Total number of atomic tasks in the mission DAG.
+  - `completed_tasks` (`integer`): Count of successfully completed tasks.
+  - `failed_tasks` (`integer`): Count of permanently failed tasks.
+  - `active_allocations` (`array of objects`): Array of `{task_id, robot_id, start_time}` for currently executing tasks.
+  - `estimated_remaining_seconds` (`number`): Critical-path projected completion time.
+  - `critical_hazards_detected` (`integer`): Count of unmitigated high-priority hazard alerts.
 - **Communication Mechanism**: WebSocket feed `/ws/mission_status`; REST endpoint `GET /api/v1/missions/{id}/status`.
 - **Validation Rules**: `completed_tasks + failed_tasks <= total_tasks`.
-- **Versioning Considerations**: Extended progress metrics (e.g. total distance traversed) can be added cleanly.
+- **Versioning Rules**:
+  - Current Version: `v1.0.0`.
+  - Additional progress metrics (e.g. total distance traversed) may be added as optional fields in minor versions.

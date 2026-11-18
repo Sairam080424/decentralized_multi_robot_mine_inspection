@@ -73,7 +73,7 @@ The assigned module must address the following requirement IDs from [SYSTEM_REQU
 
 ## 6. Definition of Done (DoD) Checklist
 
-The Pull Request will not be approved or merged into `develop` unless all criteria are satisfied:
+The Pull Request will not be approved or merged into `main` unless all criteria are satisfied:
 - [ ] **Interface Adherence**: All published/subscribed topics conform strictly to `SHARED_INTERFACE_DEFINITIONS.md`.
 - [ ] **No Unverified Claims**: Submodule status reflects actual implementation state; no unmeasured performance benchmarks.
 - [ ] **Static Analysis & Linting**: Zero warnings in `clang-tidy`, `clang-format`, `flake8`, `black`, and `ament_lint`.

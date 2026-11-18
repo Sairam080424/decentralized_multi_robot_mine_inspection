@@ -1,6 +1,6 @@
 # Founder / Principal Architect Code Review Checklist
 
-> **Purpose**: This checklist is used by the Technical Founder / Principal Systems Architect to systematically review every Pull Request (PR) before merging into `develop` or `main`. It guarantees architectural integrity, safety autarchy, and high documentation standards as the team scales.
+> **Purpose**: This checklist is used by the Technical Founder / Principal Systems Architect to systematically review every Pull Request (PR) before merging into `main`. It guarantees architectural integrity, safety autarchy, and high documentation standards as the team scales.
 
 ---
 

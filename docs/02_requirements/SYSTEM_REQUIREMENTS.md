@@ -95,7 +95,7 @@ All numerical performance parameters are explicitly marked as `PROPOSED` or `TBD
 | `SAF-002` | The Local Safety Manager shall possess unconditional authority to override motor velocity commands to zero. | P0 | Override Assertion Test | `SAF-001` | PROPOSED |
 | `SAF-003` | Emergency stop reflex shall halt motor output within `[PROPOSED TARGET: < 50 ms]` of obstacle envelope breach. | P0 | Response Latency Test | `SAF-002` | PROPOSED |
 | `SAF-004` | Platform tilt exceeding `[PROPOSED TARGET: 25 degrees]` roll or pitch shall trigger an immediate safety halt. | P0 | Gazebo Incline Test | `SAF-001` | PROPOSED |
-| `SAF-005` | Layer 3 surface operators shall possess an emergency global abort command halting all reachable robots within 100 ms. | P0 | Global Abort Injection | `COM-001` | PROPOSED |
+| `SAF-005` | Layer 3 surface operators shall possess an emergency global abort command halting all reachable robots within `[PROPOSED TARGET: < 100 ms]`. | P0 | Global Abort Injection | `COM-001` | PROPOSED |
 
 ---
 

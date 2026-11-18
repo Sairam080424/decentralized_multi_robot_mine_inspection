@@ -28,7 +28,7 @@ flowchart TD
 1. **Downwards Dependency Only**: Layer 3 depends on Layer 2 interfaces; Layer 2 depends on Layer 1 interfaces.
 2. **Zero Upward Coupling**: Layer 1 has zero imports or dependencies on Layer 2 or Layer 3. Layer 2 has zero imports or dependencies on Layer 3.
 3. **No Direct Actuator Control from Layer 3**: Layer 3 cannot publish to `/cmd_vel` or directly manipulate motors. All robot movements are mediated through Layer 2 task allocation and Layer 1 Nav2 planning.
-4. **Local Safety Autarchy**: Layer 1 physical safety reflexes operate independently at 50 Hz and cannot be preempted or overridden by Layer 2 or Layer 3.
+4. **Local Safety Autarchy**: Layer 1 physical safety reflexes operate independently at `[PROPOSED TARGET: 50 Hz]` and cannot be preempted or overridden by Layer 2 or Layer 3.
 
 ---
 
@@ -43,7 +43,7 @@ To manage all physical and simulated environmental interactions, sensor data acq
 - Ingesting, synchronizing, and filtering 3D LiDAR point clouds, RGB camera feeds, radiometric thermal matrices, and IMU data.
 - Maintaining continuous 50 Hz localization via dual Extended Kalman Filters (`robot_localization`) and lifelong 2D SLAM (`slam_toolbox`).
 - Planning and tracking local collision-free paths using Nav2 (Smac 2D Global Planner and MPPI Local Controller).
-- Enforcing authoritative 50 Hz local safety watchdog limits (collision stop within < 50 ms, tip-over halt at > 25 degrees).
+- Enforcing authoritative local safety watchdog limits (collision stop within `[PROPOSED TARGET: < 50 ms]`, tip-over halt at `[PROPOSED TARGET: > 25 degrees]`, executing at `[PROPOSED TARGET: 50 Hz]`).
 - Exposing the standardized ROS 2 `ExecuteTask.action` server to Layer 2.
 
 ### 2.3 Modules

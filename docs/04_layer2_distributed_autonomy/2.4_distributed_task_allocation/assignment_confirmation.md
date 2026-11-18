@@ -36,17 +36,18 @@ sequenceDiagram
 
 ## 6. Functional Requirements
 - **REQ-2.4-007**: Assignment confirmation handshake shall complete within `[PROPOSED TARGET: < 500 ms]` over nominal mesh links.
-- **REQ-2.4-008**: If winning bidder fails to acknowledge award within 500 ms, auctioneer shall revoke award and re-open auction.
+- **REQ-2.4-008**: If winning bidder fails to acknowledge award within `[PROPOSED TARGET: < 500 ms]`, auctioneer shall revoke award and fall back to runner-up bidder.
+- **REQ-2.4-009**: Robot agent shall strictly require a valid, committed LeaseToken before initiating Layer 1 motor actuation.
 
 ## 7. Technical Approach
-Deploy a two-phase commit (2PC) FSM. If the winner fails to reply with `TaskAck` before timeout, the auctioneer immediately falls back to the runner-up bidder without re-running the entire auction.
+Deploy a two-phase commit (2PC) FSM. If the winner fails to reply with `TaskAck` before timeout, the auctioneer immediately falls back to the runner-up bidder without re-running the entire auction. If the auctioneer fails before issuing the lease token, the winner's local timer aborts the tentative award and returns to the idle bidding pool.
 
 ## 8. Open-Source Resources
 ### Two-Phase Commit (2PC) Protocols
 - **What it provides**: Atomic transaction commitment in distributed systems.
-- **Why it is relevant**: Prevents phantom task assignments where neither robot executes the task.
+- **Why it is relevant**: Prevents phantom task assignments where neither robot executes the task, or split-brain where both claim execution.
 - **What we can reuse**: 2PC state machine design.
-- **What we must develop ourselves**: Lightweight wireless robotics implementation.
+- **What we must develop ourselves**: Lightweight wireless robotics implementation with cryptographic lease signing.
 
 
 ## 9. Prerequisites
