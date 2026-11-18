@@ -3,9 +3,14 @@
 ## 1. Overview & Architectural Role
 To ensure that multiple robotics, perception, controls, and distributed systems developers can develop modules independently without causing integration conflicts, all cross-module and cross-layer interactions must strictly adhere to the standardized shared interfaces documented herein.
 
+### Separation of Schema Ownership and Data Production
+A foundational governance invariant in this platform is the explicit distinction between **Schema Ownership** and **Data Production / Publishing**:
+- **Schema Ownership**: Vested in exactly one designated module lead who maintains the ROS 2 IDL message, service, action, or JSON schema specification, guarantees field type integrity, enforces semantic validation rules, and manages SemVer evolution. No other module or developer may modify or extend the schema definition without an approved Architectural RFC signed off by the Technical Founder.
+- **Data Production & Publishing**: Other functional modules may be explicitly authorized to produce, serialize, aggregate, or publish data conforming to that schema, strictly bound by the owner's interface contract. Authorized publishers cannot alter, omit required fields, or mutate the underlying interface contract.
+
 Every interface defined in this repository has:
-1. **Exactly One Clear Owner**: The designated module lead responsible for schema changes and backward compatibility.
-2. **Defined Producers**: The explicit software components authorized to create and publish this data.
+1. **Exactly One Schema Owner**: The designated module lead responsible for schema changes and backward compatibility.
+2. **Defined Producers & Publishers**: The explicit software components authorized to originate and publish data under this contract.
 3. **Defined Consumers**: The explicit software components authorized to subscribe, query, or ingest this data.
 4. **Strict Data Types**: Fully defined primitive types, message fields, and schemas.
 5. **Formal Versioning Rules**: Explicit Semantic Versioning (SemVer) guidelines and breaking change deprecation procedures.
@@ -18,8 +23,10 @@ These interfaces are currently **PROPOSED** specifications subject to empirical 
 
 ### 2.1 Interface: `RobotTelemetry` (`interfaces/msg/RobotTelemetry.msg`)
 - **Purpose**: Represents the real-time kinematic, physical, and operational state of an individual robot.
-- **Single Clear Owner**: Module 1.5 (Local Autonomy & Safety Lead).
-- **Defined Producers**: Module 1.5 Robot Agent / Module 1.6 State Publisher (running locally on each robot).
+- **Single Schema Owner**: **Module 1.5 (Local Autonomy & Safety Lead)**. Module 1.5 possesses exclusive schema ownership over `interfaces/msg/RobotTelemetry.msg`, maintaining field definitions, coordinate frame semantics, and SemVer version evolution.
+- **Data Production & Publishing Roles**:
+  - **State Originator / Primary Producer**: **Module 1.5 Robot Agent**. Module 1.5 originates the robot's lifecycle FSM state, active task binding, and core operational status.
+  - **Authorized Network Publisher**: **Module 1.6 State Publisher / Robot Communication Interface**. Module 1.6 is authorized to serialize, schedule, and publish `RobotTelemetry` messages over local ROS 2 topics (`/{robot_name}/telemetry` at 5 Hz) and bridge them over Eclipse Zenoh (`mine/peers/{uuid}/telemetry`) according to the approved Module 1.5 interface contract. Module 1.6 has no authority to alter message fields or schema structure.
 - **Defined Consumers**: Module 2.1 Peer Discovery, Module 2.4 Distributed Task Allocation, Module 2.6 State Management, Module 3.4 Monitoring Dashboard.
 - **Data Types & Fields** (`interfaces/msg/RobotTelemetry.msg`):
   - `std_msgs/Header header`: Monotonic timestamp and coordinate frame reference (`map` or `odom`).

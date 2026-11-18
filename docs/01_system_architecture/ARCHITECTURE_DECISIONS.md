@@ -22,7 +22,7 @@
 - **Context**: Standard ROS 2 CycloneDDS/FastDDS discovery produces high multicast chatter that saturates lossy, low-bandwidth underground mesh networks.
 - **Decision**: Propose Eclipse Zenoh as the peer-to-peer transport bridge for Layer 2 inter-robot communication, retaining standard ROS 2 intra-robot DDS for Layer 1.
 - **Evaluation Criteria**: Bandwidth overhead, discovery latency, and partition recovery to be evaluated in Milestone M4/M7 against native CycloneDDS and FastDDS Discovery Server.
-- **Consequences**: Low projected wire overhead (<5 bytes header), built-in routing, and native support for intermittent connectivity.
+- **Consequences**: Low projected wire overhead (marked TBD pending reproducible benchmark), built-in routing, and native support for intermittent connectivity.
 
 ---
 
@@ -40,7 +40,7 @@
 - **Context**: Complex distributed logic or delayed remote commands could cause physical collisions.
 - **Decision**: Propose an authoritative `local_safety_manager` running at a proposed rate of 50 Hz in Layer 1 that intercepts and overrides all velocity commands upon hazard envelope breach.
 - **Evaluation Criteria**: Watchdog loop latency (< 50 ms proposed target) and dynamic obstacle/tilt thresholds to be empirically calibrated in Milestone M3/M5 through fault-injection trials.
-- **Consequences**: Guarantees physical safety even during autonomy crashes or delayed network packets.
+- **Consequences**: Establishes physical safety as a core architectural objective requiring empirical simulation and hardware validation, isolated from upper-layer crashes or network stalls.
 
 ---
 

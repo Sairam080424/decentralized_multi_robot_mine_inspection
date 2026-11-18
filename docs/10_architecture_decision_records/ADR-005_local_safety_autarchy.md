@@ -15,6 +15,6 @@
     - Calibrate tilt threshold ($25^\circ$ proposed) and cliff/scree detection thresholds in Gazebo physics.
     - Measure processor utilization and safety watchdog jitter under heavy SLAM/Nav2 compute loads.
 - **Consequences**:
-  - Physical collision avoidance is guaranteed independently of upper-layer faults or network stalls.
+  - Physical collision avoidance is treated as an architectural safety objective requiring rigorous simulation and hardware validation, independent of upper-layer faults or network stalls.
   - Upward layers cannot disable or override local safety reflexes.
   - Final safety arbitration implementation to be verified and accepted following fault-injection trials in Milestone M3.

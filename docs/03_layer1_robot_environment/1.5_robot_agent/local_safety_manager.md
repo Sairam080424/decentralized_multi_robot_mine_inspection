@@ -1,7 +1,7 @@
 # Submodule 1.5.5: Local Safety Manager
 
 ## 1. Purpose
-Enforces authoritative, un-preemptible local safety reflexes, guaranteeing physical collision prevention, tip-over protection, and emergency stopping independently of upper layers.
+Enforces authoritative, un-preemptible local safety reflexes, establishing physical collision prevention, tip-over protection, and emergency stopping as core architectural safety objectives evaluated independently of upper layers.
 
 ## 2. Responsibility
 Continuously monitor raw proximity sensors, IMU tilt angles, and motor drive health; intercept and override all velocity commands if safety bounds are violated.

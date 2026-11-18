@@ -8,11 +8,11 @@
   - **Status**: Under active architectural evaluation; not a final binding decision.
   - **Alternatives Considered**: Native CycloneDDS with unicast discovery, FastDDS Discovery Server, and ZeroMQ/protobuf ad-hoc gossip.
   - **Empirical Evaluation Plan (Milestone M4 & M7)**:
-    - Measure discovery time ($< 2.0\text{ s}$ target) and link wire overhead ($< 5\text{ bytes}$ header claim).
+    - Measure discovery time ($< 2.0\text{ s}$ target) and wire protocol overhead (marked **TBD** pending reproducible packet capture benchmarking).
     - Benchmark peer recovery latency after subterranean partition reconnection.
     - Measure CPU and memory footprint on resource-constrained embedded robot compute.
 - **Consequences**:
-  - Wire overhead projected to be $< 5\text{ bytes}$ header.
+  - Wire overhead: **[TBD - Pending Benchmark]** (projected compact framing undergoing empirical measurement against CycloneDDS in Milestone M4; no claims below 5 bytes accepted until supported by reproducible test logs).
   - Native support for ad-hoc routing and network partitions.
   - Requires maintaining `zenoh-bridge-dds` or direct Zenoh C/C++ client wrappers.
   - Final adoption decision contingent upon empirical network profiling in Milestone M4.

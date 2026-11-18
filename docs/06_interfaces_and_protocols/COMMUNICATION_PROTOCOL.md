@@ -2,7 +2,7 @@
 
 ## 1. Multi-Tier Protocol Fabric
 1. **Intra-Robot Communication**: ROS 2 DDS (CycloneDDS / FastDDS) operating on local robot loopback interfaces and separate `ROS_DOMAIN_ID`s (Robot A: Domain 10, Robot B: Domain 11).
-2. **Inter-Robot P2P Mesh Communication**: Eclipse Zenoh peer-to-peer gossip protocol over ad-hoc wireless mesh (802.11s), providing low overhead (< 5 bytes header) and built-in routing.
+2. **Inter-Robot P2P Mesh Communication**: Eclipse Zenoh peer-to-peer gossip protocol over ad-hoc wireless mesh (802.11s), providing low overhead (wire overhead marked TBD pending empirical benchmark) and built-in routing.
 3. **Surface Observability Communication**: Asynchronous WebSockets and HTTP REST API for operations console connectivity.
 
 ## 2. Zenoh Key Expression Taxonomy

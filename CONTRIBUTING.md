@@ -9,7 +9,7 @@ Welcome to the **Decentralized Multi-Robot Mine Inspection Platform**. This docu
 1. **Documentation Before Implementation**: Architectural documentation, interface definitions, requirement traceability, and test specifications must be reviewed and merged *before* writing production code.
 2. **Never Claim Unimplemented Features**: Submodules and features must reflect their true lifecycle state (`PLANNED`, `IN_PROGRESS`, `BLOCKED`, `IMPLEMENTED`, `TESTED`, `VERIFIED`). Never mark planned functionality as implemented.
 3. **No Unverified Benchmarks**: Performance metrics must be documented as `[PROPOSED TARGET]` until validated through reproducible simulation or hardware test benches.
-4. **Local Safety Autarchy**: No code contribution may bypass, preempt, or weaken Layer 1 local robot safety managers (`local_safety_manager.cpp`). Local safety holds ultimate authority over motor actuation.
+4. **Local Safety Autarchy**: No code contribution may bypass, preempt, or weaken the planned Layer 1 Local Safety Manager component (scheduled for implementation under Module 1.5 in Milestone M3). Local safety retains ultimate authority over motor actuation.
 5. **Decoupled Architecture**: Layer 2 (Autonomy) must not depend on concrete hardware implementations; Layer 3 (Operations) must never command robot actuators directly.
 6. **Interface Schema Immutability**: All shared data models (`interfaces/`) are locked. Changes require an approved Architectural RFC.
 

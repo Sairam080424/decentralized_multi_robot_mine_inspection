@@ -13,7 +13,7 @@ All Layer 2 Distributed Autonomy modules.
 - **Compatibility Status**: `Integrates via `zenoh-bridge-dds` and direct C/Python APIs.`
 
 ## 5. Advantages
-Extremely compact wire format (< 5 bytes header), native P2P mesh support, built-in queryables, zero multicast storms.
+Compact wire format (wire overhead marked TBD pending reproducible benchmark), native P2P mesh support, built-in queryables, zero multicast storms.
 
 ## 6. Limitations
 Requires installing Zenoh router/bridge binaries alongside standard ROS 2 packages.

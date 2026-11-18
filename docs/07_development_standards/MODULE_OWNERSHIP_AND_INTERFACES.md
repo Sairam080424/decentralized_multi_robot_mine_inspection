@@ -20,7 +20,7 @@ To allow multiple robotics and distributed systems software engineers to develop
 | **1.3 Perception & Localization** | Perception & SLAM Engineer | Point cloud filtering (PCL), camera/thermal parsing (OpenCV), SLAM Toolbox, dual EKF localization | `src/layer1_robot_environment/perception/**`, `config/slam/**`, `config/ekf/**` | `interfaces/*`, `src/layer2_*` | Module 1.2 | Module 1.4, Module 1.5 | None |
 | **1.4 Navigation & Motion** | Navigation & Controls Lead | Nav2 Smac global planner, MPPI trajectory controller, obstacle avoidance, recovery behaviors | `src/layer1_robot_environment/navigation/**`, `config/nav2/**` | `interfaces/*`, `src/layer2_*` | Module 1.3 | Module 1.5 | None |
 | **1.5 Robot Agent** | Local Autonomy & Safety Lead | Platform identity, capability loader, FSM state manager, `ExecuteTask.action` server, Authoritative Local Safety Manager (50 Hz) | `src/layer1_robot_environment/robot_agent/**` | `simulation/*`, `src/layer2_*` | Module 1.4 | Module 2.8 | **`RobotTelemetry`**, **`SafetyStatus`**, **`ExecuteTask`**, **`ExecuteInspectionTask`** |
-| **1.6 Robot Communication Interface** | Embedded Middleware Engineer | Namespaced ROS 2 publishers/subscribers, telemetry aggregation (5 Hz), link health diagnostics | `src/layer1_robot_environment/communication/**` | `interfaces/*`, `src/layer3_*` | Module 1.5 | Module 2.1, Module 2.8 | None |
+| **1.6 Robot Communication Interface** | Embedded Middleware Engineer | Namespaced ROS 2 publishers/subscribers, telemetry aggregation (5 Hz), link health diagnostics; authorized publisher of `RobotTelemetry` per Module 1.5 interface contract | `src/layer1_robot_environment/communication/**` | `interfaces/*`, `src/layer3_*` | Module 1.5 | Module 2.1, Module 2.8 | None (authorized publisher of `RobotTelemetry`) |
 
 ---
 
@@ -55,4 +55,4 @@ To allow multiple robotics and distributed systems software engineers to develop
 ## 3. Strict Rules for Modifying Shared Files
 1. **Interface Immutability**: No developer may edit files in `interfaces/msg/`, `interfaces/srv/`, `interfaces/action/`, or `interfaces/schemas/` without an approved Architectural RFC signed off by the Technical Founder.
 2. **Layer Isolation**: Layer 3 developers must never import or invoke `rclcpp` or Layer 1 hardware controller packages.
-3. **Local Safety Invariant**: No developer working on Layer 2 or Layer 3 may modify `src/layer1_robot_environment/robot_agent/local_safety_manager.cpp`.
+3. **Local Safety Invariant**: No developer working on Layer 2 or Layer 3 may modify or weaken the Layer 1 Local Safety Manager component (planned under Module 1.5 for Milestone M3).

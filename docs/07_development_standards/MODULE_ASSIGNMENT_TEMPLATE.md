@@ -40,7 +40,7 @@ The assignee has write permission **only** within their assigned module director
 
 ### Prohibited Files & Direct Access
 - **STRICTLY PROHIBITED**: Modifying any file in `interfaces/` (Requires an approved Architectural RFC).
-- **STRICTLY PROHIBITED**: Modifying `src/layer1_robot_environment/robot_agent/local_safety_manager.cpp`.
+- **STRICTLY PROHIBITED**: Modifying or bypassing the planned Layer 1 Local Safety Manager component.
 - **STRICTLY PROHIBITED**: Introducing upward dependencies (e.g., Layer 1 importing Layer 2, Layer 2 importing Layer 3).
 - **STRICTLY PROHIBITED**: Accessing hardware/actuator topics directly from Layer 3.
 

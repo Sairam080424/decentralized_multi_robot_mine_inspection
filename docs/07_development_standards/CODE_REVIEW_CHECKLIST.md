@@ -22,7 +22,7 @@
 ## 2. Safety & Fault Isolation
 
 - [ ] **Local Safety Manager Autarchy**:
-  - Confirm no modification weakens or bypasses `local_safety_manager.cpp` (50 Hz emergency stop, tilt limit, obstacle proximity brake).
+  - Confirm no modification weakens or bypasses the planned Layer 1 Local Safety Manager component (50 Hz emergency stop, tilt limit, obstacle proximity brake).
   - Safety authority remains strictly local to each robot agent.
 - [ ] **Communication Disruption Resilience**:
   - In Layer 2 and Layer 3 PRs: Does the code handle packet drops, network partitioning, and delay gracefully?
