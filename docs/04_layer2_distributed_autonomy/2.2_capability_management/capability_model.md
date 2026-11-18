@@ -52,7 +52,7 @@ classDiagram
 - **REQ-2.2-002**: Schema validation shall reject capability files missing required sensor or locomotion specifications.
 
 ## 7. Technical Approach
-Define JSON Schema in `docs/06_interfaces_protocols/CAPABILITY_SCHEMA.md`. Implement C++ representation using `nlohmann/json` with automated serialization/deserialization macros.
+Define JSON Schema in `docs/06_interfaces_and_protocols/CAPABILITY_SCHEMA.md`. Implement C++ representation using `nlohmann/json` with automated serialization/deserialization macros.
 
 ## 8. Open-Source Resources
 ### nlohmann/json-schema-validator

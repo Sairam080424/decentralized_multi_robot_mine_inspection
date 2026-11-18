@@ -15,7 +15,7 @@ import re
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path("/home/oem/repository").resolve()
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 EXPECTED_SECTIONS = [
     "1. Purpose",

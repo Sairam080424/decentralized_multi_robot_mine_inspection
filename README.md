@@ -85,11 +85,12 @@ The repository is organized into distinct, modular functional trees:
 | `docs/03_layer1_robot_environment/` | Simulation, robot models, perception, SLAM, Nav2, safety, agent interfaces | [Layer 1 Docs](docs/03_layer1_robot_environment/README.md) |
 | `docs/04_layer2_distributed_autonomy/` | P2P discovery, capabilities, task allocation, CRDT state, fault tolerance | [Layer 2 Docs](docs/04_layer2_distributed_autonomy/README.md) |
 | `docs/05_layer3_mission_operations/` | Mission planning, inspection evidence, visualization, database, SDK | [Layer 3 Docs](docs/05_layer3_mission_operations/README.md) |
-| `docs/06_interfaces_protocols/` | Interface contracts, ROS 2 IDLs, JSON schemas, protocol specs | [Interfaces](docs/06_interfaces_protocols/README.md) |
-| `docs/07_development/` | Developer environment setup, coding standards, build workflows, git rules | [Development](docs/07_development/DEVELOPMENT_SETUP.md) |
-| `docs/08_testing_validation/` | Verification strategy, unit, integration, simulation, fault injection tests | [Testing](docs/08_testing_validation/TEST_STRATEGY.md) |
-| `docs/09_roadmap/` | Milestones M0 through M11, actionable task backlog, architectural changelog | [Roadmap](docs/09_roadmap/DEVELOPMENT_ROADMAP.md) |
-| `docs/10_technology_references/` | Formal technical investigations of 13 open-source foundational libraries | [Tech References](docs/10_technology_references/README.md) |
+| `docs/06_interfaces_and_protocols/` | Interface contracts, ROS 2 IDLs, JSON schemas, protocol specs | [Interfaces](docs/06_interfaces_and_protocols/README.md) |
+| `docs/07_development_standards/` | Developer environment setup, coding standards, build workflows, git rules | [Development](docs/07_development_standards/DEVELOPMENT_SETUP.md) |
+| `docs/08_testing_and_validation/` | Verification strategy, unit, integration, simulation, fault injection tests | [Testing](docs/08_testing_and_validation/TEST_STRATEGY.md) |
+| `docs/09_roadmap/` | Milestones M0 through M13, actionable task backlog, architectural changelog | [Roadmap](docs/09_roadmap/DEVELOPMENT_ROADMAP.md) |
+| `docs/10_architecture_decision_records/` | Formal Architectural Decision Records (ADR-001 through ADR-006) | [ADRs](docs/10_architecture_decision_records/README.md) |
+| `docs/11_technology_references/` | Formal technical investigations of 13 open-source foundational libraries | [Tech References](docs/11_technology_references/README.md) |
 
 ---
 
