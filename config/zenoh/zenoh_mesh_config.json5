@@ -1,0 +1,5 @@
+// Eclipse Zenoh configuration for subterranean mesh
+{
+  mode: 'peer',
+  scouting: { multicast: { enabled: true } }
+}

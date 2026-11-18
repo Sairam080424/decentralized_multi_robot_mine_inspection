@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobotCapability",
+  "type": "object",
+  "required": ["robot_id", "archetype", "locomotion", "sensors", "actions", "resources"],
+  "properties": {
+    "robot_id": { "type": "string", "format": "uuid" },
+    "archetype": { "type": "string", "enum": ["EXPLORATION_SCOUT", "INSPECTION_SPECIALIST"] },
+    "locomotion": { "type": "object" },
+    "sensors": { "type": "array", "items": { "type": "string" } },
+    "actions": { "type": "array", "items": { "type": "string" } },
+    "resources": { "type": "object" }
+  }
+}

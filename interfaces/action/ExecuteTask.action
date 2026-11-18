@@ -1,0 +1,23 @@
+# Execute Task Action Interface
+# Goal
+string task_id
+string task_type
+geometry_msgs/PoseStamped target_pose
+string[] required_sensors
+float32 dwell_time_sec
+string lease_token
+---
+# Result
+uint8 STATUS_SUCCESS=0
+uint8 STATUS_SAFETY_ABORT=1
+uint8 STATUS_TIMEOUT=2
+uint8 STATUS_STALLED=3
+uint8 status_code
+string evidence_uri
+string message
+---
+# Feedback
+float32 percent_complete
+float32 distance_remaining
+builtin_interfaces/Duration time_elapsed
+string current_substate

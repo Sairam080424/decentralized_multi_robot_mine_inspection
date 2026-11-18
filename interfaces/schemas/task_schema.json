@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskDefinition",
+  "type": "object",
+  "required": ["task_id", "task_type", "target_location", "required_sensors", "priority", "dwell_time_sec"],
+  "properties": {
+    "task_id": { "type": "string", "format": "uuid" },
+    "task_type": { "type": "string" },
+    "target_location": { "type": "object" },
+    "required_sensors": { "type": "array", "items": { "type": "string" } },
+    "priority": { "type": "integer" },
+    "dwell_time_sec": { "type": "number" }
+  }
+}

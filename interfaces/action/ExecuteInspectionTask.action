@@ -1,0 +1,19 @@
+# Execute Inspection Task Action Interface
+# Goal
+string task_id
+string asset_id
+geometry_msgs/PoseStamped target_pose
+float32 pan_angle_deg
+float32 tilt_angle_deg
+bool capture_thermal
+bool capture_rgb
+---
+# Result
+uint8 status_code
+float32 peak_temperature_celsius
+bool anomaly_detected
+string evidence_uri
+---
+# Feedback
+float32 percent_complete
+string status_message

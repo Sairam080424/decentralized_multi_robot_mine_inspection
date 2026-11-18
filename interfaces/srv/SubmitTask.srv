@@ -1,0 +1,6 @@
+# Submit Task Service
+string task_id
+string task_json
+---
+bool accepted
+string message

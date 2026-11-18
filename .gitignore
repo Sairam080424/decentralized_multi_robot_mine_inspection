@@ -1,0 +1,64 @@
+# Build artifacts
+build/
+install/
+log/
+.colcon/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+dist/
+*.egg-info/
+.eggs/
+
+# C++ / CMake
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.d
+*.o
+*.obj
+
+# ROS 2 & Gazebo
+*.bag
+*.db3
+*.mcap
+*.pcd
+*.ply
+*.dae.baked
+.ignition/
+.gazebo/
+
+# Testing & Coverage
+.cache
+.pytest_cache/
+.coverage
+htmlcov/
+*.gcda
+*.gcno
+*.gcov
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Scratch & Temporary
+scratch/
+tmp/
+*.log

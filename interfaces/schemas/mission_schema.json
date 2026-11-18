@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MissionSpecification",
+  "type": "object",
+  "required": ["mission_id", "mission_name", "tasks"],
+  "properties": {
+    "mission_id": { "type": "string", "format": "uuid" },
+    "mission_name": { "type": "string" },
+    "tasks": { "type": "array" }
+  }
+}

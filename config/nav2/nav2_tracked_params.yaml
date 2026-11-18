@@ -1,0 +1,4 @@
+# Nav2 parameters for Robot B (Tracked Skid-Steer)
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 20.0

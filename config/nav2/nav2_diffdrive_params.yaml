@@ -1,0 +1,4 @@
+# Nav2 parameters for Robot A (Differential Drive)
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 20.0
