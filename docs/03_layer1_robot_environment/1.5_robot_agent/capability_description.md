@@ -32,7 +32,7 @@ flowchart LR
 - **REQ-1.5-004**: Dynamic capability changes (e.g., sensor failure) shall be broadcast within 1.0 second of occurrence.
 
 ## 7. Technical Approach
-Define JSON schema for robot capabilities conforming to schema defined in `docs/06_interfaces_protocols/CAPABILITY_SCHEMA.md`. Implement ROS 2 node publishing capabilities at 1 Hz and on status mutation.
+Define JSON schema for robot capabilities conforming to schema defined in `docs/06_interfaces_and_protocols/CAPABILITY_SCHEMA.md`. Implement ROS 2 node publishing capabilities at 1 Hz and on status mutation.
 
 ## 8. Open-Source Resources
 ### nlohmann/json

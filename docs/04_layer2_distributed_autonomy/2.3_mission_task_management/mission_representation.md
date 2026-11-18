@@ -33,7 +33,7 @@ flowchart TD
 - **REQ-2.3-002**: Mission validator shall reject any mission specification containing circular dependencies ($T_A \to T_B \to T_A$).
 
 ## 7. Technical Approach
-Implement DAG graph structures in modern C++ utilizing `boost::graph` or clean custom graph primitives. Validate incoming mission manifests against `docs/06_interfaces_protocols/MISSION_SCHEMA.md`.
+Implement DAG graph structures in modern C++ utilizing `boost::graph` or clean custom graph primitives. Validate incoming mission manifests against `docs/06_interfaces_and_protocols/MISSION_SCHEMA.md`.
 
 ## 8. Open-Source Resources
 ### Boost Graph Library (BGL)

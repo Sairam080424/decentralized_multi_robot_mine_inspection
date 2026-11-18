@@ -70,7 +70,7 @@ Python 3.10+, FastAPI, Uvicorn.
 
 ## 12. Interfaces
 ### OpenAPI
-- `docs/06_interfaces_protocols/openapi.yaml`: Formal OpenAPI 3.0 specification.
+- `docs/06_interfaces_and_protocols/openapi.yaml`: Formal OpenAPI 3.0 specification.
 
 
 ## 13. Testing Strategy
