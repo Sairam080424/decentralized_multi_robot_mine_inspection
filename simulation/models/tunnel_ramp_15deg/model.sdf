@@ -1,0 +1,106 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="tunnel_ramp_15deg">
+    <static>true</static>
+
+    <!-- Inclined Ramp Floor -->
+    <link name="ramp_floor">
+      <pose>6.000 0 1.559 0 -0.2618 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>12.423 4.300 0.1</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.9</mu>
+              <mu2>0.85</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>12.423 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.22 0.20 0.18 1.0</ambient>
+          <diffuse>0.29 0.26 0.24 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Ramp Left Wall -->
+    <link name="ramp_left_wall">
+      <pose>6.000 1.950 3.108 0 -0.2618 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>12.423 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>12.423 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Ramp Right Wall -->
+    <link name="ramp_right_wall">
+      <pose>6.000 -1.950 3.108 0 -0.2618 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>12.423 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>12.423 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Ramp Ceiling -->
+    <link name="ramp_ceiling">
+      <pose>6.000 0 4.808 0 -0.2618 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>12.423 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>12.423 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

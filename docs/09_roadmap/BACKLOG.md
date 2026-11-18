@@ -17,19 +17,19 @@ This backlog tracks all engineering activities across the 14 project milestones 
 - [x] `TASK-M0-010`: Author development setup, coding standards, build instructions, test guidelines. (Priority: P0, Status: DONE)
 - [x] `TASK-M0-011`: Author test strategy, unit, integration, system, and fault-injection test specs. (Priority: P0, Status: DONE)
 - [x] `TASK-M0-012`: Author open-source technology references for 13 foundational libraries. (Priority: P0, Status: DONE)
-- [x] `TASK-M0-013`: Author development roadmap, milestones M0-M13, backlog, changelog. (Priority: P0, Status: IN_PROGRESS)
-- [x] `TASK-M0-014`: Verify all files, validate links and Mermaid syntax, initialize Git repository. (Priority: P0, Status: IN_PROGRESS)
+- [x] `TASK-M0-013`: Author development roadmap, milestones M0-M13, backlog, changelog. (Priority: P0, Status: DONE)
+- [x] `TASK-M0-014`: Verify all files, validate links and Mermaid syntax, initialize Git repository. (Priority: P0, Status: DONE)
 - [x] `TASK-M0-015`: Author Phase 0E Shared Interface Definitions and Module Ownership matrix. (Priority: P0, Status: DONE)
 - [x] `TASK-M0-016`: Author Phase 0F Module Assignment Template and Code Review Checklist. (Priority: P0, Status: DONE)
 
 ---
 
 ## Milestone M1: Underground Mine Simulation
-- [ ] `TASK-M1-001`: Create Gazebo Sim subterranean mine world SDF with irregular rock walls and dim lighting. (Priority: P0, Status: PLANNED)
-- [ ] `TASK-M1-002`: Author procedural mine tunnel generation script with customizable cross-sections. (Priority: P1, Status: PLANNED)
-- [ ] `TASK-M1-003`: Model terrain roughness, mud patches, and 15-degree incline ramps in SDF. (Priority: P1, Status: PLANNED)
-- [ ] `TASK-M1-004`: Model physical mine obstacles (fallen rock piles, timber roof supports, standing water). (Priority: P1, Status: PLANNED)
-- [ ] `TASK-M1-005`: Implement Gazebo RF communication attenuation plugin simulating underground line-of-sight loss. (Priority: P2, Status: PLANNED)
+- [x] `TASK-M1-001`: Create Gazebo Sim subterranean mine world SDF with irregular rock walls and dim lighting. (Priority: P0, Status: DONE)
+- [x] `TASK-M1-002`: Author procedural mine tunnel generation script with customizable cross-sections. (Priority: P1, Status: DONE)
+- [x] `TASK-M1-003`: Model terrain roughness, mud patches, and 15-degree incline ramps in SDF. (Priority: P1, Status: DONE)
+- [x] `TASK-M1-004`: Model physical mine obstacles (fallen rock piles, timber roof supports, standing water). (Priority: P1, Status: DONE)
+- [x] `TASK-M1-005`: Implement Gazebo RF communication attenuation model simulating underground line-of-sight loss. (Priority: P2, Status: DONE)
 
 ---
 

@@ -18,7 +18,7 @@ This document provides formal technical specifications for each of the 14 projec
 - **Deliverables**: Complete documentation repository, verification script, `.github/` templates, initial Git commit history on `main` and `feature/m0-project-foundation`.
 - **Testing Requirements**: Verification script must validate 0 broken links, 0 template incompleteness errors, 0 unsupported Mermaid diagrams, 0 false implementation claims.
 - **Acceptance Criteria**: Repository audit passes with 100% compliance; PR opened and approved by Technical Founder.
-- **Completion Status**: `IN_PROGRESS` (Active Milestone).
+- **Completion Status**: `DONE`.
 
 ---
 
@@ -35,7 +35,7 @@ This document provides formal technical specifications for each of the 14 projec
 - **Deliverables**: Gazebo world SDF packages (`mine_world.sdf`), procedural tunnel generation scripts, communication attenuation plugin, launch files.
 - **Testing Requirements**: World loads in Gazebo Sim at >= 30 Hz real-time factor; RF plugin correctly attenuates signal across rock pillars.
 - **Acceptance Criteria**: Simulated underground environment renders reliably without physics instability; robots spawn at designated mine portals.
-- **Completion Status**: `PLANNED`.
+- **Completion Status**: `DONE`.
 
 ---
 

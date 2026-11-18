@@ -76,7 +76,8 @@ Automated ray-cast test along tunnel joints to verify zero ray penetration outsi
 - **LiDAR Glitches at Seams**: Imperfect mesh alignment causes virtual laser beams to penetrate to infinity, corrupting SLAM occupancy grids.
 
 ## 15. Implementation Status
-`PLANNED`
+`IN_PROGRESS`
+Procedural tunnel generator implemented in `scripts/generate_mine_tunnels.py` with support for straight, 90-degree turn, T-junction, and ramp segments across arched, rectangular, and trapezoidal cross-sections. Validated via `tests/unit/test_tunnel_generator.py`.
 
 ## 16. References
 - [DARPA SubT Tunnel Assets](https://github.com/osrf/subt/tree/master/submitted_models)

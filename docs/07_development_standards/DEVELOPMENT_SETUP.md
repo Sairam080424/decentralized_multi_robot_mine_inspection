@@ -29,10 +29,14 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-a
 sudo apt update && sudo apt install -y ros-humble-desktop
 ```
 
-## 4. Gazebo Sim (Garden / Fortress) & Nav2
+## 4. Gazebo Sim (Harmonic / Garden) & Nav2
+For ROS 2 Humble with Gazebo Harmonic (8.15.0+):
 ```bash
 sudo apt install -y \
-    ros-humble-ros-gz \
+    ros-humble-ros-gzharmonic \
+    ros-humble-ros-gzharmonic-sim \
+    ros-humble-ros-gzharmonic-bridge \
+    ros-humble-gz-ros2-control \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-slam-toolbox \

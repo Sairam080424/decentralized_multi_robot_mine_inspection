@@ -74,7 +74,8 @@ Place 120°C target in tunnel; verify Robot B thermal camera registers peak pixe
 - **Radiometric Sensor Calibration**: Ensuring pixel values accurately map to temperature floats in degrees Celsius for inspection evidence storage.
 
 ## 15. Implementation Status
-`PLANNED`
+`IN_PROGRESS`
+Milestone M1 physical terrain hazards (`terrain_gravel_patch`, `terrain_mud_patch`, `standing_water`, `low_clearance_hazard`) implemented in `simulation/models/`. Thermal hotspot sensor plugins and radiometric targets are scheduled for Milestone M2.
 
 ## 16. References
 - [Gazebo Thermal Camera Tutorial](https://gazebosim.org/docs/garden/thermal_camera)

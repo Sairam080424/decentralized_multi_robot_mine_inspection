@@ -87,7 +87,8 @@ Load world in Gazebo Sim; monitor real-time factor (RTF); verify collision bound
 - **Complex Collision Meshes**: High polygon rock faces can drastically degrade physics real-time factors; requires simplified convex decomposition for collision hulls.
 
 ## 15. Implementation Status
-`PLANNED`
+`IN_PROGRESS`
+Milestone M1 subterranean mine simulation world implemented in `simulation/worlds/mine_world.sdf` featuring > 125 meters of interconnected tunnels, portal staging, 15-degree test ramp, dim lighting, and DART physics configuration. Validated via `gz sdf -k` and headless simulation runs.
 
 ## 16. References
 - [Gazebo Sim Documentation](https://gazebosim.org/docs)

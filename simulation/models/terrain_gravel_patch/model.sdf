@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="terrain_gravel_patch">
+    <static>true</static>
+    <link name="gravel_base">
+      <pose>0 0 0.02 0 0 0</pose>
+      <collision name="gravel_collision">
+        <geometry>
+          <box>
+            <size>4.0 2.8 0.04</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.40</mu>
+              <mu2>0.35</mu2>
+              <slip1>0.05</slip1>
+              <slip2>0.05</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="gravel_visual">
+        <geometry>
+          <box>
+            <size>4.0 2.8 0.04</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.35 0.32 0.28 1.0</ambient>
+          <diffuse>0.42 0.38 0.33 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Small scattered gravel stones to test suspension/lidar reflection -->
+    <link name="stone_1">
+      <pose>0.6 0.4 0.045 0.1 0.2 0.4</pose>
+      <collision name="col">
+        <geometry>
+          <box><size>0.15 0.12 0.05</size></box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box><size>0.15 0.12 0.05</size></box>
+        </geometry>
+        <material>
+          <ambient>0.4 0.38 0.35 1.0</ambient>
+          <diffuse>0.5 0.46 0.42 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+    <link name="stone_2">
+      <pose>-0.8 -0.5 0.04 -0.1 0.15 -0.3</pose>
+      <collision name="col">
+        <geometry>
+          <box><size>0.18 0.14 0.04</size></box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box><size>0.18 0.14 0.04</size></box>
+        </geometry>
+        <material>
+          <ambient>0.4 0.38 0.35 1.0</ambient>
+          <diffuse>0.5 0.46 0.42 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+    <link name="stone_3">
+      <pose>1.2 -0.3 0.05 0.2 -0.1 0.8</pose>
+      <collision name="col">
+        <geometry>
+          <box><size>0.12 0.16 0.06</size></box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box><size>0.12 0.16 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.4 0.38 0.35 1.0</ambient>
+          <diffuse>0.5 0.46 0.42 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

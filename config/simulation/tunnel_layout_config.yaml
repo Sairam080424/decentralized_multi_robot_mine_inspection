@@ -1,0 +1,43 @@
+# Example Configuration for Procedural Underground Mine Tunnel Generator
+# Milestone M1: Underground Mine Simulation (TASK-M1-002)
+
+seed: 42
+output_directory: "simulation/models"
+
+# Defined modular segment templates
+models:
+  - name: "tunnel_straight_10m"
+    type: "straight"
+    length: 10.0
+    width: 3.5
+    height: 3.0
+    profile: "arched"
+    roughness: 0.08
+
+  - name: "tunnel_turn_90deg"
+    type: "turn_90deg"
+    radius: 6.0
+    width: 3.5
+    height: 3.0
+
+  - name: "tunnel_t_junction"
+    type: "t_junction"
+    main_length: 12.0
+    branch_length: 6.0
+    width: 3.5
+    height: 3.0
+
+  - name: "tunnel_ramp_15deg"
+    type: "ramp"
+    run_length: 12.0
+    incline_deg: 15.0
+    width: 3.5
+    height: 3.0
+
+  - name: "tunnel_straight_20m_narrow"
+    type: "straight"
+    length: 20.0
+    width: 2.8
+    height: 2.6
+    profile: "rectangular"
+    roughness: 0.12

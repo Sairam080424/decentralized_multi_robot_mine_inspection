@@ -79,7 +79,8 @@ Execute ping test between Robot A and B while moving around a 90-degree corner; 
 - **Accurate Subterranean RF Modeling**: Underground tunnels exhibit complex wave-guide effects; simplified geodesic distance models must balance realism with compute overhead.
 
 ## 15. Implementation Status
-`PLANNED`
+`IN_PROGRESS`
+Milestone M1 subterranean RF communication attenuation model implemented in `src/layer1_robot_environment/communication_simulation/subterranean_rf_model.py` and CLI evaluator `scripts/simulate_rf_attenuation.py`. Features distance-dependent path loss, corner diffraction penalty (18 dB/corner), packet loss sigmoid, and forced blackout mode. Full Gazebo C++ system plugin integration will be expanded in Milestone M6 during peer discovery and networking.
 
 ## 16. References
 - [Underground Mine Wireless Propagation Studies (NIOSH)](https://www.cdc.gov/niosh/mining)

@@ -75,7 +75,8 @@ Simulate robot collision at 0.5 m/s; verify appropriate friction resistance and 
 - **Physics Jitter in Mesh Contacts**: Complex contact meshes between rubble rocks can trigger ODE solver instability; resolve via convex decomposition.
 
 ## 15. Implementation Status
-`PLANNED`
+`IN_PROGRESS`
+Modular obstacle models (`fallen_rock_pile`, `timber_roof_support`, `mine_debris`, `low_clearance_hazard`) implemented with verified collision hulls under `simulation/models/`. Validated via `tests/unit/test_terrain_and_obstacles.py`.
 
 ## 16. References
 - [Mining Safety and Health Administration (MSHA) Hazard Library](https://www.msha.gov)
