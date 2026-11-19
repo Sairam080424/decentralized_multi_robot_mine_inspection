@@ -13,6 +13,31 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 MODELS_DIR = REPO_ROOT / "simulation" / "models"
 
 
+def euler_to_matrix(roll: float, pitch: float, yaw: float):
+    """
+    Constructs a 3x3 rotation matrix R = Rz(yaw) * Ry(pitch) * Rx(roll)
+    following the standard SDFormat / Gazebo extrinsic Euler convention.
+    """
+    cr, sr = math.cos(roll), math.sin(roll)
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    cy, sy = math.cos(yaw), math.sin(yaw)
+    return (
+        (cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr),
+        (sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr),
+        (-sp,     cp * sr,                cp * cr),
+    )
+
+
+def apply_transform(rot_matrix, translation, point):
+    """Applies 3D affine transform p_transformed = R * p + t."""
+    x, y, z = point
+    tx, ty, tz = translation
+    rx = rot_matrix[0][0] * x + rot_matrix[0][1] * y + rot_matrix[0][2] * z
+    ry = rot_matrix[1][0] * x + rot_matrix[1][1] * y + rot_matrix[1][2] * z
+    rz = rot_matrix[2][0] * x + rot_matrix[2][1] * y + rot_matrix[2][2] * z
+    return (rx + tx, ry + ty, rz + tz)
+
+
 def test_straight_tunnel_dimensions():
     """Verify straight tunnel dimensions and minimum clearances."""
     # Test tunnel_straight_10m
@@ -311,26 +336,30 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     upper_ceil_bot_z = ud_c_p[2] - ud_c_s[2] / 2.0          # 6.215m
 
     # 3. Ramp World Transformation Helper
-    # Dynamically extract ramp model pose from mine_world.sdf rather than hard-coding
+    # Dynamically extract full 6-DOF ramp model pose from mine_world.sdf rather than hard-coding
     ramp_include = tree.find(".//include[name='ramp_15deg_section']")
     assert ramp_include is not None, "ramp_15deg_section include not found in mine_world.sdf"
     ramp_pose_tokens = [float(v) for v in ramp_include.find("pose").text.split()]
-    ramp_world_origin = tuple(ramp_pose_tokens[:3])
-    assert math.isclose(ramp_world_origin[0], 42.0, abs_tol=1e-3), f"Ramp world x origin is {ramp_world_origin[0]}, expected 42.0"
+    assert len(ramp_pose_tokens) == 6, f"Expected 6-DOF pose for ramp include, got {len(ramp_pose_tokens)}"
+    ramp_world_t = tuple(ramp_pose_tokens[:3])
+    ramp_world_r = euler_to_matrix(ramp_pose_tokens[3], ramp_pose_tokens[4], ramp_pose_tokens[5])
+    assert math.isclose(ramp_world_t[0], 42.0, abs_tol=1e-3), f"Ramp world x origin is {ramp_world_t[0]}, expected 42.0"
 
     ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
 
-    def transform_ramp_point(link_name: str, local_dx: float, local_dy: float, local_dz: float):
+    def transform_ramp_point(link_name: str, local_dx: float, local_dy: float, local_dz: float,
+                             world_t=ramp_world_t, world_r=ramp_world_r):
         link = ramp_tree.find(f".//link[@name='{link_name}']")
         pose = [float(v) for v in link.find("pose").text.split()]
-        lx, ly, lz, _, pitch, _ = pose
-        cos_p = math.cos(pitch)
-        sin_p = math.sin(pitch)
-        # Rotation by pitch around Y: x' = x*cos + z*sin, y' = y, z' = -x*sin + z*cos
-        rx = local_dx * cos_p + local_dz * sin_p
-        ry = local_dy
-        rz = -local_dx * sin_p + local_dz * cos_p
-        return (ramp_world_origin[0] + lx + rx, ramp_world_origin[1] + ly + ry, ramp_world_origin[2] + lz + rz)
+        lx, ly, lz = pose[:3]
+        lr = pose[3] if len(pose) > 3 else 0.0
+        lp = pose[4] if len(pose) > 4 else 0.0
+        lyaw = pose[5] if len(pose) > 5 else 0.0
+
+        r_link = euler_to_matrix(lr, lp, lyaw)
+        p_model = apply_transform(r_link, (lx, ly, lz), (local_dx, local_dy, local_dz))
+        p_world = apply_transform(world_r, world_t, p_model)
+        return p_world
 
     # 4. Ramp Floor Transformed Coordinates
     rf_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_floor']//geometry/box/size").text.split()]
@@ -469,4 +498,58 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     assert math.isclose(normal_clearance, 3.000, abs_tol=0.01), (
         f"Normal ceiling clearance along ramp {normal_clearance:.4f}m is not 3.000m"
     )
+
+
+def test_ramp_transformation_with_nonzero_world_orientation():
+    """
+    Focused test validating that 6-DOF transformation handles arbitrary world orientation
+    (roll, pitch, yaw) robustly:
+    - Tests ramp transformation when placed at world pose (100.0, -50.0, 10.0, yaw=+90 deg).
+    - Asserts that floor longitudinal vector rotates to world +Y.
+    - Asserts that 15.0-degree incline angle is invariant under 3D world rotation.
+    - Asserts that normal ceiling clearance (3.000m) is invariant under 3D world rotation.
+    - Asserts that left wall (local +Y) rotates to world -X.
+    """
+    ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
+
+    # Non-zero world pose: translation (100.0, -50.0, 10.0), yaw = +pi/2 (+90 deg)
+    world_origin = (100.0, -50.0, 10.0)
+    world_rot = euler_to_matrix(0.0, 0.0, math.pi / 2.0)
+
+    def transform_pt(link_name: str, dx: float, dy: float, dz: float):
+        link = ramp_tree.find(f".//link[@name='{link_name}']")
+        pose = [float(v) for v in link.find("pose").text.split()]
+        lx, ly, lz = pose[:3]
+        lr = pose[3] if len(pose) > 3 else 0.0
+        lp = pose[4] if len(pose) > 4 else 0.0
+        lyaw = pose[5] if len(pose) > 5 else 0.0
+        r_link = euler_to_matrix(lr, lp, lyaw)
+        p_model = apply_transform(r_link, (lx, ly, lz), (dx, dy, dz))
+        return apply_transform(world_rot, world_origin, p_model)
+
+    rf_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_floor']//geometry/box/size").text.split()]
+    f_start = transform_pt("ramp_floor", -rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+    f_end = transform_pt("ramp_floor", rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+
+    # In yaw=+90 deg, longitudinal corridor runs along +Y:
+    assert math.isclose(f_start[0], 100.0, abs_tol=0.05)
+    assert math.isclose(f_end[0], 100.0, abs_tol=0.05)
+    delta_y = f_end[1] - f_start[1]
+    delta_z = f_end[2] - f_start[2]
+    assert math.isclose(delta_y, 12.0, abs_tol=0.05)
+    assert math.isclose(delta_z, 3.215, abs_tol=0.05)
+
+    # Measured slope along rotated heading must remain exactly 15.0 degrees
+    measured_incline = math.degrees(math.atan2(delta_z, delta_y))
+    assert math.isclose(measured_incline, 15.0, abs_tol=0.1)
+
+    # Ceiling clearance along rotated corridor must remain 3.000m
+    rc_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_ceiling']//geometry/box/size").text.split()]
+    c_start_bot = transform_pt("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+    assert math.isclose(c_start_bot[2] - f_start[2], 3.007, abs_tol=0.05)
+
+    # Left wall (local dy = +1.95 - 0.2 = 1.75) rotated by yaw=+90 deg maps to world -X:
+    rw_l_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_left_wall']//geometry/box/size").text.split()]
+    lw_mid = transform_pt("ramp_left_wall", 0.0, -rw_l_size[1] / 2.0, 0.0)
+    assert math.isclose(lw_mid[0], 98.25, abs_tol=0.05)
 

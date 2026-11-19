@@ -106,7 +106,7 @@ flowchart TD
 - **Objective**: Author and validate pure-Python analytical RF propagation, waveguide routing, corner diffraction, obstacle attenuation, and CLI evaluation tool.
 - **Status**: Completed in M1.
 - **Deliverables**: `subterranean_rf_model.py`, `simulate_rf_attenuation.py`, `rf_attenuation_config.yaml`, unit test suite.
-- **Validation**: 28 automated unit tests verifying straight tunnel LOS, 1 bend, 2 bends, wall collisions, obstacle intersections, intermediate edge projections, and custom layouts.
+- **Validation**: 33 automated unit tests in `tests/unit/test_rf_attenuation.py` verifying straight tunnel LOS, 1 bend, 2 bends, wall collisions, obstacle intersections, intermediate edge projections, custom layouts, and lateral endpoint offset invariance.
 
 ### Phase 2: Runtime Network Emulation & Middleware Integration (Milestone M6 - Planned)
 - **Objective**: Real-time traffic shaping on virtual network interfaces and dynamic ROS 2 fault injection.
@@ -126,16 +126,18 @@ flowchart TD
 
 ## 13. Testing Strategy
 - **M1 Testing (Completed)**:
-  - Unit tests in `tests/unit/test_rf_attenuation.py` testing:
+  - Unit tests in `tests/unit/test_rf_attenuation.py` (33 tests) validating:
     - Path loss formulas, reference distance $d_0$, and free-space exponents.
     - Single-edge projection and along-corridor distance calculation.
-    - Multi-corridor Dijkstra routing and discrete bend counting ($90^\circ$ turns).
+    - Multi-corridor Dijkstra routing and discrete bend counting ($90^\circ$ turns) from corridor headings.
+    - Lateral endpoint offset invariance (transverse offsets do not generate artificial bends).
     - Alternative routes (shortest path selection).
     - Disconnected topologies (infinite distance, 100% loss).
     - Ray-casting line segment intersections with tunnel rock walls.
     - 3D ray-box intersection with obstacles at varying clearance heights.
     - Sigmoid packet loss curves, latency with Gaussian jitter, and bandwidth shaping.
     - Manual blackout state injection.
+  - Overall M1 local test execution suite: 59 unit tests across 7 test modules and 2 headless Gazebo system tests (61 total local tests). Remote GitHub Actions CI executes the repository and documentation audit (`tools/verify_repository.py`).
 - **M6 Testing (Deferred)**:
   - Multi-container ping / iperf test between Robot A and Robot B in Gazebo simulation while navigating across tunnel corners; verify observed socket packet loss and throughput match model predictions.
 
@@ -151,7 +153,7 @@ flowchart TD
   - Exact 2D rock wall raycasting and 3D slab AABB intersection for subterranean obstacles (`_segments_intersect`, `_segment_intersects_aabb_3d`).
   - Distance-dependent path loss, corner diffraction loss (18 dB/corner provisional assumption), obstacle shadow loss (12 dB provisional assumption), sigmoid packet loss rate, jittered latency, bandwidth shaping, and forced blackout mode.
   - Interactive CLI link evaluation tool in `scripts/simulate_rf_attenuation.py` consuming dynamic parameters from `config/simulation/rf_attenuation_config.yaml`.
-  - Comprehensive unit test suite in `tests/unit/test_rf_attenuation.py` covering LOS straight corridors, 1 bend, 2 bends, wall obstruction, obstacle penetration/elevation clearances, and custom topologies.
+  - Comprehensive unit test suite in `tests/unit/test_rf_attenuation.py` (33 tests) covering LOS straight corridors, 1 bend, 2 bends, wall obstruction, obstacle penetration/elevation clearances, custom topologies, and lateral endpoint offset invariance.
 
 - **Milestone M6 Scope (Deferred / Planned)**:
   - Gazebo C++ system plugin (`subterranean_rf_plugin.cc`).
