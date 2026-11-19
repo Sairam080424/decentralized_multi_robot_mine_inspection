@@ -1,0 +1,89 @@
+# Milestone M1 - Subterranean Mine Simulation World Configuration
+# Decentralized Multi-Robot Mine Inspection Platform
+
+simulation:
+  world_name: "subterranean_mine"
+  world_file: "simulation/worlds/mine_world.sdf"
+  model_paths:
+    - "simulation/models"
+    - "simulation/worlds"
+
+physics:
+  engine: "dartsim"
+  max_step_size: 0.001     # 1 ms step size for stable subterranean contact dynamics
+  real_time_update_rate: 1000.0
+  real_time_factor: 1.0
+  gravity: [0.0, 0.0, -9.81]
+
+environment:
+  ambient_light: [0.04, 0.04, 0.04, 1.0] # Dim subterranean darkness
+  background: [0.01, 0.01, 0.01, 1.0]
+  tunnel_network:
+    total_length_m: 125.0
+    segments:
+      - id: "drift_portal_10m"
+        type: "tunnel_straight_10m"
+        pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "drift_main_20m"
+        type: "tunnel_straight_20m_narrow"
+        pose: [15.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "junction_alpha"
+        type: "tunnel_t_junction"
+        pose: [30.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "drift_crosscut_10m"
+        type: "tunnel_straight_10m"
+        pose: [30.0, 10.0, 0.0, 0.0, 0.0, 1.5708]
+      - id: "turn_east"
+        type: "tunnel_turn_90deg"
+        pose: [30.0, 20.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "drift_east_20m"
+        type: "tunnel_straight_20m_narrow"
+        pose: [45.0, 25.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "ramp_test_15deg"
+        type: "tunnel_ramp_15deg"
+        pose: [42.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      - id: "drift_upper_10m"
+        type: "tunnel_straight_10m"
+        pose: [54.0, 0.0, 3.215, 0.0, 0.0, 0.0]
+
+robot_spawn_points:
+  # Designated portal staging area (no robots spawned in M1; ready for M2)
+  robot_1_portal_staging:
+    description: "Portal entry staging - Lead Inspector (Robot A)"
+    position: [-2.0, -1.0, 0.1]
+    orientation_rpy: [0.0, 0.0, 0.0]
+  robot_2_portal_staging:
+    description: "Portal entry staging - Secondary Explorer (Robot B)"
+    position: [-4.0, 1.0, 0.1]
+    orientation_rpy: [0.0, 0.0, 0.0]
+  robot_3_portal_staging:
+    description: "Portal entry staging - Communication Relay (Robot C)"
+    position: [-6.0, 0.0, 0.1]
+    orientation_rpy: [0.0, 0.0, 0.0]
+
+terrain_hazards:
+  gravel_patch_1:
+    pose: [12.0, 0.0, 0.01, 0.0, 0.0, 0.0]
+    friction_mu1: 0.40
+    friction_mu2: 0.35
+  mud_patch_1:
+    pose: [22.0, -0.3, 0.01, 0.0, 0.0, 0.0]
+    friction_mu1: 0.22
+    friction_mu2: 0.20
+  incline_ramp:
+    pose: [42.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    incline_angle_deg: 15.0 # Test configuration; traversability subject to M2 validation
+
+obstacles:
+  timber_support_portal:
+    pose: [5.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  timber_support_mid:
+    pose: [20.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  fallen_rock_pile_junction:
+    pose: [28.5, 0.8, 0.0, 0.0, 0.0, 0.2]
+  standing_water_crosscut:
+    pose: [30.0, 12.0, 0.0, 0.0, 0.0, 0.0]
+  mine_debris_east:
+    pose: [42.0, 24.8, 0.0, 0.0, 0.0, 0.5]
+  low_clearance_brow:
+    pose: [18.0, 0.0, 0.0, 0.0, 0.0, 0.0]

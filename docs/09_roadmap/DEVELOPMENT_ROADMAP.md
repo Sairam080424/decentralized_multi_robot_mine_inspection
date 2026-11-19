@@ -8,8 +8,8 @@ The Decentralized Multi-Robot Mine Inspection Platform follows a rigorous, phase
 
 ```mermaid
 flowchart TD
-    M0["M0: Repository & Architecture Foundation (CURRENT)"] --> M1["M1: Underground Mine Simulation"]
-    M0 --> M2["M2: Two Heterogeneous Robot Models"]
+    M0["M0: Repository & Architecture Foundation (DONE)"] --> M1["M1: Underground Mine Simulation (DONE)"]
+    M0 --> M2["M2: Two Heterogeneous Robot Models (NEXT)"]
     M1 --> M3["M3: Perception, Localization & Mapping"]
     M2 --> M3
     M2 --> M4["M4: Independent Robot Navigation"]
@@ -35,8 +35,8 @@ flowchart TD
 
 | Milestone | Title | Focus Area | Required Modules | Primary Layer | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **M0** | Repository & Architecture Foundation | Repository setup, documentation, interfaces, standards | All Modules (Docs/Arch) | All Layers | **IN_PROGRESS** |
-| **M1** | Underground Mine Simulation | Gazebo Sim subterranean world, procedural tunnels, hazards | MOD-1.1 | Layer 1 | PLANNED |
+| **M0** | Repository & Architecture Foundation | Repository setup, documentation, interfaces, standards | All Modules (Docs/Arch) | All Layers | **DONE** |
+| **M1** | Underground Mine Simulation | Gazebo Sim subterranean world, procedural tunnels, hazards | MOD-1.1 | Layer 1 | **DONE** |
 | **M2** | Two Heterogeneous Robot Models | Robot A (diff-drive) & Robot B (tracked) URDF/Xacro, sensors | MOD-1.2 | Layer 1 | PLANNED |
 | **M3** | Perception, Localization & Mapping | LiDAR/camera processing, 3D SLAM, multi-robot map alignment | MOD-1.3 | Layer 1 | PLANNED |
 | **M4** | Independent Robot Navigation | Nav2 integration, 3D costmaps, local planners, slip recovery | MOD-1.4 | Layer 1 | PLANNED |

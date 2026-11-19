@@ -1,0 +1,343 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="tunnel_straight_10m">
+    <static>true</static>
+
+    <!-- Floor Section -->
+    <link name="floor">
+      <pose>0 0 -0.05 0 0 0</pose>
+      <collision name="floor_collision">
+        <geometry>
+          <box>
+            <size>10.000 4.300 0.1</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.85</mu>
+              <mu2>0.75</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="floor_visual">
+        <geometry>
+          <box>
+            <size>10.000 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+          <specular>0.05 0.05 0.05 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Left Wall Sub-block 0 -->
+    <link name="left_wall_0">
+      <pose>-4.000 1.972 1.500 0 0 -0.028</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Right Wall Sub-block 0 -->
+    <link name="right_wall_0">
+      <pose>-4.000 -1.986 1.500 0 0 -0.017</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Left Wall Sub-block 1 -->
+    <link name="left_wall_1">
+      <pose>-2.000 1.988 1.500 0 0 0.011</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Right Wall Sub-block 1 -->
+    <link name="right_wall_1">
+      <pose>-2.000 -1.887 1.500 0 0 -0.025</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Left Wall Sub-block 2 -->
+    <link name="left_wall_2">
+      <pose>0.000 1.938 1.500 0 0 -0.028</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Right Wall Sub-block 2 -->
+    <link name="right_wall_2">
+      <pose>0.000 -1.995 1.500 0 0 0.000</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Left Wall Sub-block 3 -->
+    <link name="left_wall_3">
+      <pose>2.000 1.874 1.500 0 0 -0.018</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Right Wall Sub-block 3 -->
+    <link name="right_wall_3">
+      <pose>2.000 -1.926 1.500 0 0 0.003</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Left Wall Sub-block 4 -->
+    <link name="left_wall_4">
+      <pose>4.000 1.905 1.500 0 0 0.005</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Right Wall Sub-block 4 -->
+    <link name="right_wall_4">
+      <pose>4.000 -1.900 1.500 0 0 -0.030</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.040 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+          <specular>0.02 0.02 0.02 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Arched Roof Facets -->
+    <link name="roof_center">
+      <pose>0 0 3.250 0 0 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+    <link name="roof_left">
+      <pose>0 1.050 2.900 0.35 0 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+    <link name="roof_right">
+      <pose>0 -1.050 2.900 -0.35 0 0</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>10.000 1.433 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

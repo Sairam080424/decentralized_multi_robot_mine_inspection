@@ -1,0 +1,558 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="tunnel_turn_90deg">
+    <static>true</static>
+
+    <!-- Bend Segment 0 Floor -->
+    <link name="bend_floor_0">
+      <pose>0.783 0.051 -0.05 0 0 0.131</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 0 Outer Wall -->
+    <link name="bend_outer_wall_0">
+      <pose>1.038 -1.882 1.500 0 0 0.131</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 0 Inner Wall -->
+    <link name="bend_inner_wall_0">
+      <pose>0.529 1.985 1.500 0 0 0.131</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 0 Ceiling -->
+    <link name="bend_ceiling_0">
+      <pose>0.783 0.051 3.200 0 0 0.131</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 1 Floor -->
+    <link name="bend_floor_1">
+      <pose>2.296 0.457 -0.05 0 0 0.393</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 1 Outer Wall -->
+    <link name="bend_outer_wall_1">
+      <pose>3.042 -1.345 1.500 0 0 0.393</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 1 Inner Wall -->
+    <link name="bend_inner_wall_1">
+      <pose>1.550 2.258 1.500 0 0 0.393</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 1 Ceiling -->
+    <link name="bend_ceiling_1">
+      <pose>2.296 0.457 3.200 0 0 0.393</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 2 Floor -->
+    <link name="bend_floor_2">
+      <pose>3.653 1.240 -0.05 0 0 0.654</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 2 Outer Wall -->
+    <link name="bend_outer_wall_2">
+      <pose>4.840 -0.307 1.500 0 0 0.654</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 2 Inner Wall -->
+    <link name="bend_inner_wall_2">
+      <pose>2.465 2.787 1.500 0 0 0.654</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 2 Ceiling -->
+    <link name="bend_ceiling_2">
+      <pose>3.653 1.240 3.200 0 0 0.654</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 3 Floor -->
+    <link name="bend_floor_3">
+      <pose>4.760 2.347 -0.05 0 0 0.916</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 3 Outer Wall -->
+    <link name="bend_outer_wall_3">
+      <pose>6.307 1.160 1.500 0 0 0.916</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 3 Inner Wall -->
+    <link name="bend_inner_wall_3">
+      <pose>3.213 3.535 1.500 0 0 0.916</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 3 Ceiling -->
+    <link name="bend_ceiling_3">
+      <pose>4.760 2.347 3.200 0 0 0.916</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 4 Floor -->
+    <link name="bend_floor_4">
+      <pose>5.543 3.704 -0.05 0 0 1.178</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 4 Outer Wall -->
+    <link name="bend_outer_wall_4">
+      <pose>7.345 2.958 1.500 0 0 1.178</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 4 Inner Wall -->
+    <link name="bend_inner_wall_4">
+      <pose>3.742 4.450 1.500 0 0 1.178</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 4 Ceiling -->
+    <link name="bend_ceiling_4">
+      <pose>5.543 3.704 3.200 0 0 1.178</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 5 Floor -->
+    <link name="bend_floor_5">
+      <pose>5.949 5.217 -0.05 0 0 1.440</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.18 0.17 1.0</ambient>
+          <diffuse>0.28 0.25 0.23 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 5 Outer Wall -->
+    <link name="bend_outer_wall_5">
+      <pose>7.882 4.962 1.500 0 0 1.440</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>2.179 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 5 Inner Wall -->
+    <link name="bend_inner_wall_5">
+      <pose>4.015 5.471 1.500 0 0 1.440</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.110 0.400 3.000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.16 0.15 1.0</ambient>
+          <diffuse>0.22 0.20 0.19 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Bend Segment 5 Ceiling -->
+    <link name="bend_ceiling_5">
+      <pose>5.949 5.217 3.200 0 0 1.440</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>1.645 4.300 0.400</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.14 0.13 1.0</ambient>
+          <diffuse>0.20 0.18 0.17 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

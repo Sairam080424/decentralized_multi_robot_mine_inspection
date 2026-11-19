@@ -1,0 +1,23 @@
+# Subterranean RF Communication Attenuation Configuration
+# Milestone M1: Underground Mine Simulation (TASK-M1-005)
+
+radio_parameters:
+  tx_power_dbm: 20.0
+  rx_sensitivity_dbm: -95.0
+  path_loss_exponent: 2.4
+  reference_distance_m: 1.0
+  reference_loss_db: 40.0
+
+underground_attenuation:
+  corner_diffraction_loss_db: 18.0
+  obstacle_shadow_loss_db: 12.0
+  los_cutoff_distance_m: 60.0
+  nlos_corner_limit: 2
+
+network_shaping:
+  base_latency_ms: 8.0
+  max_jitter_ms: 12.0
+  bandwidth_limit_kbps: 250.0
+
+fault_injection:
+  forced_blackout: false

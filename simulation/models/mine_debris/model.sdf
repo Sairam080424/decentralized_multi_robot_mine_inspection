@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="mine_debris">
+    <static>true</static>
+    <!-- Crushed ventilation duct section -->
+    <link name="vent_duct">
+      <pose>0.4 0.3 0.25 0.1 0.4 0.6</pose>
+      <collision name="col">
+        <geometry>
+          <cylinder>
+            <radius>0.25</radius>
+            <length>2.2</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <cylinder>
+            <radius>0.25</radius>
+            <length>2.2</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.3 0.28 0.25 1.0</ambient>
+          <diffuse>0.45 0.40 0.35 1.0</diffuse>
+          <specular>0.2 0.2 0.2 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Abandoned narrow-gauge steel rail -->
+    <link name="rail_track">
+      <pose>-0.3 -0.4 0.08 0 0 -0.2</pose>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>3.0 0.12 0.15</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>3.0 0.12 0.15</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.22 0.18 0.15 1.0</ambient>
+          <diffuse>0.35 0.28 0.22 1.0</diffuse>
+          <specular>0.3 0.3 0.3 1.0</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

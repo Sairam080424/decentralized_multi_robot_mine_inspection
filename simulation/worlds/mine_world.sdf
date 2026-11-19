@@ -1,0 +1,445 @@
+<?xml version="1.0" ?>
+<!--
+  Decentralized Multi-Robot Mine Inspection Platform
+  Milestone M1: Underground Mine Simulation World
+  File: simulation/worlds/mine_world.sdf
+
+  Environment: Subterranean underground mine drift network with irregular rock walls,
+               portal staging, 15-degree ramp, crosscut intersection, dim lighting,
+               and obstacle/terrain hazard zones.
+  Compatible with: Gazebo Sim 8 (Harmonic) / SDFormat 1.9+
+-->
+<sdf version="1.9">
+  <world name="mine_world">
+
+    <!-- ==================== PHYSICS CONFIGURATION ==================== -->
+    <physics name="1ms_physics" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <max_contacts>20</max_contacts>
+    </physics>
+
+    <!-- ==================== SYSTEM PLUGINS ==================== -->
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- ==================== GRAVITY & SCENE LIGHTING ==================== -->
+    <gravity>0 0 -9.81</gravity>
+
+    <scene>
+      <!-- Subterranean ambient lighting is kept near-zero (< 1 lux) -->
+      <ambient>0.04 0.04 0.04 1.0</ambient>
+      <background>0.015 0.015 0.02 1.0</background>
+      <shadows>true</shadows>
+      <grid>false</grid>
+    </scene>
+
+    <!-- Surface Daylight (External Portal Staging Only) -->
+    <light type="directional" name="surface_sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>-25 0 30 0 0.85 0</pose>
+      <diffuse>0.8 0.78 0.7 1.0</diffuse>
+      <specular>0.2 0.2 0.2 1.0</specular>
+      <direction>0.5 0 -0.85</direction>
+    </light>
+
+    <!-- Portal Entry Utility Lantern -->
+    <light type="point" name="portal_light">
+      <pose>1.0 0 2.6 0 0 0</pose>
+      <diffuse>0.6 0.52 0.35 1.0</diffuse>
+      <specular>0.1 0.1 0.05 1.0</specular>
+      <attenuation>
+        <range>16.0</range>
+        <linear>0.15</linear>
+        <constant>0.2</constant>
+        <quadratic>0.03</quadratic>
+      </attenuation>
+      <cast_shadows>true</cast_shadows>
+    </light>
+
+    <!-- Main Drift Midpoint Lantern -->
+    <light type="point" name="drift1_lantern">
+      <pose>15.0 0 2.6 0 0 0</pose>
+      <diffuse>0.55 0.48 0.32 1.0</diffuse>
+      <specular>0.08 0.08 0.05 1.0</specular>
+      <attenuation>
+        <range>14.0</range>
+        <linear>0.2</linear>
+        <constant>0.2</constant>
+        <quadratic>0.04</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!-- T-Junction Intersection Light -->
+    <light type="point" name="junction_light">
+      <pose>30.0 0 2.6 0 0 0</pose>
+      <diffuse>0.45 0.5 0.55 1.0</diffuse>
+      <specular>0.1 0.1 0.1 1.0</specular>
+      <attenuation>
+        <range>18.0</range>
+        <linear>0.15</linear>
+        <constant>0.2</constant>
+        <quadratic>0.02</quadratic>
+      </attenuation>
+      <cast_shadows>true</cast_shadows>
+    </light>
+
+    <!-- Upper Level Ramp Light -->
+    <light type="point" name="upper_level_light">
+      <pose>60.0 0 5.4 0 0 0</pose>
+      <diffuse>0.5 0.45 0.38 1.0</diffuse>
+      <specular>0.08 0.08 0.05 1.0</specular>
+      <attenuation>
+        <range>16.0</range>
+        <linear>0.18</linear>
+        <constant>0.2</constant>
+        <quadratic>0.03</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!-- ==================== SURFACE & PORTAL STAGING ==================== -->
+    <!--
+      Defined World Origin: (0, 0, 0) located at the center-line of the Mine Portal.
+      Robot A Spawn Location (M2 Explorer): (2.0, 0.0, 0.1, 0, 0, 0)
+      Robot B Spawn Location (M2 Inspector): (-2.0, 0.0, 0.1, 0, 0, 0)
+      Crosscut Inspection Waypoint: (30.0, 20.0, 0.0, 0, 0, 1.5708)
+      Upper Ramp Station Waypoint: (66.0, 0.0, 3.22, 0, 0, 0)
+    -->
+    <model name="portal_staging_ground">
+      <static>true</static>
+      <link name="ground_link">
+        <pose>-15 0 -0.05 0 0 0</pose>
+        <collision name="col">
+          <geometry>
+            <box><size>30.0 40.0 0.1</size></box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.85</mu>
+                <mu2>0.80</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="vis">
+          <geometry>
+            <box><size>30.0 40.0 0.1</size></box>
+          </geometry>
+          <material>
+            <ambient>0.3 0.28 0.25 1.0</ambient>
+            <diffuse>0.4 0.37 0.33 1.0</diffuse>
+            <specular>0.02 0.02 0.02 1.0</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Portal Entrance Arch Frame -->
+    <model name="mine_portal_arch">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="arch_left">
+        <pose>0 1.9 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>1.2 0.8 3.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>1.2 0.8 3.0</size></box></geometry>
+          <material>
+            <ambient>0.25 0.2 0.15 1.0</ambient>
+            <diffuse>0.35 0.28 0.2 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name="arch_right">
+        <pose>0 -1.9 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>1.2 0.8 3.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>1.2 0.8 3.0</size></box></geometry>
+          <material>
+            <ambient>0.25 0.2 0.15 1.0</ambient>
+            <diffuse>0.35 0.28 0.2 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name="arch_top">
+        <pose>0 0 3.2 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>1.4 4.6 0.6</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>1.4 4.6 0.6</size></box></geometry>
+          <material>
+            <ambient>0.22 0.18 0.14 1.0</ambient>
+            <diffuse>0.32 0.26 0.18 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== CONNECTED DRIFT SECTIONS ==================== -->
+
+    <!-- Drift 1: Straight Section A (x=0 to x=10m) -->
+    <include>
+      <name>drift1_sec_a</name>
+      <uri>model://tunnel_straight_10m</uri>
+      <pose>5.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Drift 1: Straight Section B (x=10 to x=20m) -->
+    <include>
+      <name>drift1_sec_b</name>
+      <uri>model://tunnel_straight_10m</uri>
+      <pose>15.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Drift 1: Straight Section C (x=20 to x=24m approach) -->
+    <model name="drift1_sec_c">
+      <static>true</static>
+      <link name="floor">
+        <pose>22.0 0 -0.05 0 0 0</pose>
+        <collision name="col"><geometry><box><size>4.0 4.3 0.1</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>4.0 4.3 0.1</size></box></geometry>
+          <material><ambient>0.2 0.18 0.17 1.0</ambient><diffuse>0.28 0.25 0.23 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="left_wall">
+        <pose>22.0 1.95 1.5 0 0 0</pose>
+        <collision name="col"><geometry><box><size>4.0 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>4.0 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="right_wall">
+        <pose>22.0 -1.95 1.5 0 0 0</pose>
+        <collision name="col"><geometry><box><size>4.0 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>4.0 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="ceiling">
+        <pose>22.0 0 3.2 0 0 0</pose>
+        <collision name="col"><geometry><box><size>4.0 4.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>4.0 4.3 0.4</size></box></geometry>
+          <material><ambient>0.15 0.14 0.13 1.0</ambient><diffuse>0.20 0.18 0.17 1.0</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drift Intersection: 3-Way T-Junction centered at x=30.0m -->
+    <include>
+      <name>junction_drift1_crosscut</name>
+      <uri>model://tunnel_t_junction</uri>
+      <pose>30.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Drift 1 Continuation: East from T-Junction (x=36 to x=42m) -->
+    <model name="drift1_sec_d">
+      <static>true</static>
+      <link name="floor">
+        <pose>39.0 0 -0.05 0 0 0</pose>
+        <collision name="col"><geometry><box><size>6.0 4.3 0.1</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>6.0 4.3 0.1</size></box></geometry>
+          <material><ambient>0.2 0.18 0.17 1.0</ambient><diffuse>0.28 0.25 0.23 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="left_wall">
+        <pose>39.0 1.95 1.5 0 0 0</pose>
+        <collision name="col"><geometry><box><size>6.0 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>6.0 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="right_wall">
+        <pose>39.0 -1.95 1.5 0 0 0</pose>
+        <collision name="col"><geometry><box><size>6.0 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>6.0 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="ceiling">
+        <pose>39.0 0 3.2 0 0 0</pose>
+        <collision name="col"><geometry><box><size>6.0 4.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>6.0 4.3 0.4</size></box></geometry>
+          <material><ambient>0.15 0.14 0.13 1.0</ambient><diffuse>0.20 0.18 0.17 1.0</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Inclined Ramp (15-degree slope, x=42 to x=54m, rise=3.215m) -->
+    <!-- Treated strictly as a test configuration, not proof of robot traversability -->
+    <include>
+      <name>ramp_15deg_section</name>
+      <uri>model://tunnel_ramp_15deg</uri>
+      <pose>42.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Upper Level Tunnel Section (x=54 to x=68m, elevation z=3.215m) -->
+    <model name="upper_drift_section">
+      <static>true</static>
+      <link name="upper_floor">
+        <pose>61.0 0 3.165 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 4.3 0.1</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>14.2 4.3 0.1</size></box></geometry>
+          <material><ambient>0.22 0.20 0.18 1.0</ambient><diffuse>0.29 0.26 0.24 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="upper_left_wall">
+        <pose>61.0 1.95 4.715 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>14.2 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="upper_right_wall">
+        <pose>61.0 -1.95 4.715 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 0.4 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>14.2 0.4 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+      <link name="upper_ceiling">
+        <pose>61.0 0 6.415 0 0 0</pose>
+        <collision name="col"><geometry><box><size>14.2 4.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>14.2 4.3 0.4</size></box></geometry>
+          <material><ambient>0.15 0.14 0.13 1.0</ambient><diffuse>0.20 0.18 0.17 1.0</diffuse></material>
+        </visual>
+      </link>
+      <!-- End cap rock face -->
+      <link name="upper_end_wall">
+        <pose>68.1 0 4.715 0 0 0</pose>
+        <collision name="col"><geometry><box><size>0.4 4.3 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.4 4.3 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Crosscut Drift extending north from T-junction (x=30, y=7 to y=19m) -->
+    <include>
+      <name>crosscut_drift_sec1</name>
+      <uri>model://tunnel_straight_10m</uri>
+      <pose>30.0 12.0 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- 90-degree Turn into East Drift at (x=30, y=17m) -->
+    <include>
+      <name>crosscut_turn_east</name>
+      <uri>model://tunnel_turn_90deg</uri>
+      <pose>30.0 17.0 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- Crosscut East Extension Drift (x=36m to x=46m, y=23m) -->
+    <include>
+      <name>crosscut_east_drift</name>
+      <uri>model://tunnel_straight_10m</uri>
+      <pose>41.0 23.0 0 0 0 0</pose>
+    </include>
+
+    <!-- East Drift Dead-End Face -->
+    <model name="east_drift_dead_end">
+      <static>true</static>
+      <pose>46.2 23.0 1.5 0 0 0</pose>
+      <link name="rock_face">
+        <collision name="col"><geometry><box><size>0.4 4.3 3.0</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.4 4.3 3.0</size></box></geometry>
+          <material><ambient>0.18 0.16 0.15 1.0</ambient><diffuse>0.22 0.20 0.19 1.0</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== TERRAIN PATCHES ==================== -->
+
+    <!-- Loose Gravel Patch in Drift 1 (x=5.0m) -->
+    <include>
+      <name>gravel_patch_drift1</name>
+      <uri>model://terrain_gravel_patch</uri>
+      <pose>5.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Wet Mud Patch near Ramp approach (x=36.0m) -->
+    <include>
+      <name>mud_patch_drift1</name>
+      <uri>model://terrain_mud_patch</uri>
+      <pose>36.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- ==================== MODULAR OBSTACLES & HAZARDS ==================== -->
+
+    <!-- Timber Roof Support Sets -->
+    <include>
+      <name>timber_support_1</name>
+      <uri>model://timber_roof_support</uri>
+      <pose>10.0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>timber_support_2</name>
+      <uri>model://timber_roof_support</uri>
+      <pose>22.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Standing Water Puddle in Main Drift -->
+    <include>
+      <name>water_puddle_drift1</name>
+      <uri>model://standing_water</uri>
+      <pose>16.0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Abandoned Mine Debris in Crosscut Approach -->
+    <include>
+      <name>debris_crosscut</name>
+      <uri>model://mine_debris</uri>
+      <pose>30.0 6.5 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- Fallen Rock Pile (Rubble Obstacle) in Crosscut Drift -->
+    <include>
+      <name>rock_fall_crosscut</name>
+      <uri>model://fallen_rock_pile</uri>
+      <pose>30.0 13.5 0 0 0 0</pose>
+    </include>
+
+    <!-- Low Clearance Hazard on Upper Drift Level (z=2.68m) -->
+    <include>
+      <name>low_clearance_upper</name>
+      <uri>model://low_clearance_hazard</uri>
+      <pose>63.0 0 2.68 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>
