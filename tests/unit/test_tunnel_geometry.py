@@ -511,8 +511,8 @@ def test_ramp_transformation_with_nonzero_world_orientation():
     2. 15.0-degree incline angle is invariant under 3D world rotation.
     3. Corridor longitudinal and transverse wall directions are perpendicular (dot product ~ 0)
        for both left and right walls.
-    4. Normal clearance along the normalized ramp surface normal is verified for wall boundaries
-       (3.000m exact) and floor-to-ceiling plates.
+    4. Clearance is verified for wall boundaries along surface normal (3.000m exact)
+       and floor-to-ceiling surface separation at matching longitudinal coordinates (2.999m exact within 0.005m).
     """
     ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
 
@@ -640,11 +640,29 @@ def test_ramp_transformation_with_nonzero_world_orientation():
             f"[{case_name}] Right wall normal clearance {rwall_normal_clearance:.4f}m is not 3.000m"
         )
 
-        # B) Floor-to-ceiling surface clearance along surface normal:
-        c_start_bot = transform_pt("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
-        v_fc = tuple(b - a for a, b in zip(f_start, c_start_bot))
-        fc_normal_clearance = dot_product(v_fc, u_normal)
-        assert math.isclose(fc_normal_clearance, 3.000, abs_tol=0.15), (
-            f"[{case_name}] Floor-to-ceiling normal clearance {fc_normal_clearance:.4f}m exceeds 3.0m nominal tolerance"
+        # B) Floor-to-ceiling surface separation at matching longitudinal coordinates:
+        # In tunnel_ramp_15deg/model.sdf, both ramp_floor and ramp_ceiling have identical pitch (-15 deg)
+        # and identical link center longitudinal coordinates (x=6.0m).
+        # Nominal vertical surface separation from SDF link poses and geometries:
+        # (rc_pose_z - rc_size_z/2) - (rf_pose_z + rf_size_z/2) = 4.808 - 0.200 - (1.559 + 0.050) = 2.999m.
+        rc_link = ramp_tree.find(".//link[@name='ramp_ceiling']")
+        rc_pose = [float(v) for v in rc_link.find("pose").text.split()]
+        expected_surface_sep = (rc_pose[2] - rc_size[2] / 2.0) - (rf_pose[2] + rf_size[2] / 2.0)
+
+        u_upright = mat_vec_mul(world_rot, (0.0, 0.0, 1.0))
+        p_floor_inner_model = (rf_pose[0], rf_pose[1], rf_pose[2] + rf_size[2] / 2.0)
+        p_ceil_inner_model = (rc_pose[0], rc_pose[1], rc_pose[2] - rc_size[2] / 2.0)
+        p_floor_inner_world = apply_transform(world_rot, world_origin, p_floor_inner_model)
+        p_ceil_inner_world = apply_transform(world_rot, world_origin, p_ceil_inner_model)
+
+        v_fc = tuple(b - a for a, b in zip(p_floor_inner_world, p_ceil_inner_world))
+        fc_upright_clearance = dot_product(v_fc, u_upright)
+
+        # Assert matching surface separation is exactly 2.999m within tight 0.005m tolerance:
+        assert math.isclose(fc_upright_clearance, 2.999, abs_tol=0.005), (
+            f"[{case_name}] Floor-to-ceiling clearance {fc_upright_clearance:.4f}m is not 2.999m"
+        )
+        assert math.isclose(fc_upright_clearance, expected_surface_sep, abs_tol=1e-5), (
+            f"[{case_name}] Clearance {fc_upright_clearance:.4f}m does not match expected {expected_surface_sep:.4f}m"
         )
 
