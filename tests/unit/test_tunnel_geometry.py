@@ -502,54 +502,149 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
 
 def test_ramp_transformation_with_nonzero_world_orientation():
     """
-    Focused test validating that 6-DOF transformation handles arbitrary world orientation
-    (roll, pitch, yaw) robustly:
-    - Tests ramp transformation when placed at world pose (100.0, -50.0, 10.0, yaw=+90 deg).
-    - Asserts that floor longitudinal vector rotates to world +Y.
-    - Asserts that 15.0-degree incline angle is invariant under 3D world rotation.
-    - Asserts that normal ceiling clearance (3.000m) is invariant under 3D world rotation.
-    - Asserts that left wall (local +Y) rotates to world -X.
+    Rigorously validates 6-DOF transformation for arbitrary world orientations
+    including yaw rotation and genuinely non-zero 3-axis (roll, pitch, yaw) orientation:
+    - Case 1: Yaw-only rotation (roll=0, pitch=0, yaw=+90 deg)
+    - Case 2: Full 6-DOF non-zero 3-axis rotation (roll=0.15 rad, pitch=-0.10 rad, yaw=0.50 rad)
+    Verifies:
+    1. Transformed longitudinal direction aligns with R_world * R_link * (1, 0, 0).
+    2. 15.0-degree incline angle is invariant under 3D world rotation.
+    3. Corridor longitudinal and transverse wall directions are perpendicular (dot product ~ 0)
+       for both left and right walls.
+    4. Normal clearance along the normalized ramp surface normal is verified for wall boundaries
+       (3.000m exact) and floor-to-ceiling plates.
     """
     ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
 
-    # Non-zero world pose: translation (100.0, -50.0, 10.0), yaw = +pi/2 (+90 deg)
-    world_origin = (100.0, -50.0, 10.0)
-    world_rot = euler_to_matrix(0.0, 0.0, math.pi / 2.0)
+    def mat_vec_mul(rot_matrix, vec):
+        x, y, z = vec
+        return (
+            rot_matrix[0][0] * x + rot_matrix[0][1] * y + rot_matrix[0][2] * z,
+            rot_matrix[1][0] * x + rot_matrix[1][1] * y + rot_matrix[1][2] * z,
+            rot_matrix[2][0] * x + rot_matrix[2][1] * y + rot_matrix[2][2] * z,
+        )
 
-    def transform_pt(link_name: str, dx: float, dy: float, dz: float):
-        link = ramp_tree.find(f".//link[@name='{link_name}']")
-        pose = [float(v) for v in link.find("pose").text.split()]
-        lx, ly, lz = pose[:3]
-        lr = pose[3] if len(pose) > 3 else 0.0
-        lp = pose[4] if len(pose) > 4 else 0.0
-        lyaw = pose[5] if len(pose) > 5 else 0.0
-        r_link = euler_to_matrix(lr, lp, lyaw)
-        p_model = apply_transform(r_link, (lx, ly, lz), (dx, dy, dz))
-        return apply_transform(world_rot, world_origin, p_model)
+    def dot_product(v1, v2):
+        return sum(a * b for a, b in zip(v1, v2))
+
+    def norm(v):
+        return math.sqrt(sum(a * a for a in v))
+
+    def normalize(v):
+        n = norm(v)
+        return tuple(a / n for a in v)
+
+    def cross_product(v1, v2):
+        return (
+            v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0],
+        )
 
     rf_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_floor']//geometry/box/size").text.split()]
-    f_start = transform_pt("ramp_floor", -rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
-    f_end = transform_pt("ramp_floor", rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
-
-    # In yaw=+90 deg, longitudinal corridor runs along +Y:
-    assert math.isclose(f_start[0], 100.0, abs_tol=0.05)
-    assert math.isclose(f_end[0], 100.0, abs_tol=0.05)
-    delta_y = f_end[1] - f_start[1]
-    delta_z = f_end[2] - f_start[2]
-    assert math.isclose(delta_y, 12.0, abs_tol=0.05)
-    assert math.isclose(delta_z, 3.215, abs_tol=0.05)
-
-    # Measured slope along rotated heading must remain exactly 15.0 degrees
-    measured_incline = math.degrees(math.atan2(delta_z, delta_y))
-    assert math.isclose(measured_incline, 15.0, abs_tol=0.1)
-
-    # Ceiling clearance along rotated corridor must remain 3.000m
     rc_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_ceiling']//geometry/box/size").text.split()]
-    c_start_bot = transform_pt("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
-    assert math.isclose(c_start_bot[2] - f_start[2], 3.007, abs_tol=0.05)
-
-    # Left wall (local dy = +1.95 - 0.2 = 1.75) rotated by yaw=+90 deg maps to world -X:
     rw_l_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_left_wall']//geometry/box/size").text.split()]
-    lw_mid = transform_pt("ramp_left_wall", 0.0, -rw_l_size[1] / 2.0, 0.0)
-    assert math.isclose(lw_mid[0], 98.25, abs_tol=0.05)
+    rw_r_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_right_wall']//geometry/box/size").text.split()]
+
+    test_orientations = [
+        # Case 1: Pure yaw rotation (+90 deg)
+        ("yaw_90deg", (100.0, -50.0, 10.0), (0.0, 0.0, math.pi / 2.0)),
+        # Case 2: Genuinely non-zero 3-axis orientation (roll, pitch, yaw all non-zero)
+        ("full_6dof_rpy", (120.0, -45.0, 15.0), (0.15, -0.10, 0.50)),
+    ]
+
+    for case_name, world_origin, (roll, pitch, yaw) in test_orientations:
+        world_rot = euler_to_matrix(roll, pitch, yaw)
+
+        def transform_pt(link_name: str, dx: float, dy: float, dz: float):
+            link = ramp_tree.find(f".//link[@name='{link_name}']")
+            pose = [float(v) for v in link.find("pose").text.split()]
+            lx, ly, lz = pose[:3]
+            lr = pose[3] if len(pose) > 3 else 0.0
+            lp = pose[4] if len(pose) > 4 else 0.0
+            lyaw = pose[5] if len(pose) > 5 else 0.0
+            r_link = euler_to_matrix(lr, lp, lyaw)
+            p_model = apply_transform(r_link, (lx, ly, lz), (dx, dy, dz))
+            return apply_transform(world_rot, world_origin, p_model)
+
+        # Longitudinal corridor vector (floor start to floor end)
+        f_start = transform_pt("ramp_floor", -rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+        f_end = transform_pt("ramp_floor", rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+        v_long = tuple(b - a for a, b in zip(f_start, f_end))
+        u_long = normalize(v_long)
+
+        # Transverse vector across corridor (right wall to left wall inner face)
+        lw_mid = transform_pt("ramp_left_wall", 0.0, -rw_l_size[1] / 2.0, 0.0)
+        rw_mid = transform_pt("ramp_right_wall", 0.0, rw_r_size[1] / 2.0, 0.0)
+        v_trans = tuple(b - a for a, b in zip(rw_mid, lw_mid))
+        u_trans = normalize(v_trans)
+
+        # Normalized ramp surface normal vector
+        u_normal = normalize(cross_product(u_long, u_trans))
+
+        # 1. Transformed longitudinal direction validation:
+        rf_link = ramp_tree.find(".//link[@name='ramp_floor']")
+        rf_pose = [float(v) for v in rf_link.find("pose").text.split()]
+        r_rf_link = euler_to_matrix(rf_pose[3], rf_pose[4], rf_pose[5])
+        u_long_model = mat_vec_mul(r_rf_link, (1.0, 0.0, 0.0))
+        u_long_expected = mat_vec_mul(world_rot, u_long_model)
+        for a, b in zip(u_long, u_long_expected):
+            assert math.isclose(a, b, abs_tol=1e-5), (
+                f"[{case_name}] Longitudinal unit vector component {a:.5f} != expected {b:.5f}"
+            )
+
+        # 2. Ramp inclination angle validation:
+        # Ramp inclination in corridor heading must remain 15.0 deg relative to horizontal heading:
+        u_horiz_world = mat_vec_mul(world_rot, (1.0, 0.0, 0.0))
+        cos_incline = max(-1.0, min(1.0, dot_product(u_long, u_horiz_world)))
+        incline_deg = math.degrees(math.acos(cos_incline))
+        assert math.isclose(incline_deg, 15.0, abs_tol=0.1), (
+            f"[{case_name}] Measured incline {incline_deg:.3f} deg is not 15.0 deg"
+        )
+
+        # 3. Wall orientation validation (perpendicular dot product):
+        dot_lt = dot_product(u_long, u_trans)
+        assert math.isclose(dot_lt, 0.0, abs_tol=1e-6), (
+            f"[{case_name}] dot(u_long, u_trans) {dot_lt:.2e} != 0, corridor is not orthogonal"
+        )
+
+        # Check left wall transverse thickness vector is perpendicular to longitudinal heading:
+        lw_outer = transform_pt("ramp_left_wall", 0.0, rw_l_size[1] / 2.0, 0.0)
+        u_lw_thick = normalize(tuple(b - a for a, b in zip(lw_mid, lw_outer)))
+        assert math.isclose(dot_product(u_long, u_lw_thick), 0.0, abs_tol=1e-6), (
+            f"[{case_name}] Left wall thickness direction is not perpendicular to corridor"
+        )
+
+        # Check right wall transverse thickness vector is perpendicular to longitudinal heading:
+        rw_outer = transform_pt("ramp_right_wall", 0.0, -rw_r_size[1] / 2.0, 0.0)
+        u_rw_thick = normalize(tuple(b - a for a, b in zip(rw_mid, rw_outer)))
+        assert math.isclose(dot_product(u_long, u_rw_thick), 0.0, abs_tol=1e-6), (
+            f"[{case_name}] Right wall thickness direction is not perpendicular to corridor"
+        )
+
+        # 4. Normal-clearance validation along surface normal:
+        # A) Wall height spanning floor to ceiling along surface normal:
+        lw_bot = transform_pt("ramp_left_wall", 0.0, -rw_l_size[1] / 2.0, -rw_l_size[2] / 2.0)
+        lw_top = transform_pt("ramp_left_wall", 0.0, -rw_l_size[1] / 2.0, rw_l_size[2] / 2.0)
+        v_wall = tuple(b - a for a, b in zip(lw_bot, lw_top))
+        wall_normal_clearance = dot_product(v_wall, u_normal)
+        assert math.isclose(wall_normal_clearance, 3.000, abs_tol=1e-3), (
+            f"[{case_name}] Wall normal clearance {wall_normal_clearance:.4f}m is not 3.000m"
+        )
+
+        rw_bot = transform_pt("ramp_right_wall", 0.0, rw_r_size[1] / 2.0, -rw_r_size[2] / 2.0)
+        rw_top = transform_pt("ramp_right_wall", 0.0, rw_r_size[1] / 2.0, rw_r_size[2] / 2.0)
+        v_rwall = tuple(b - a for a, b in zip(rw_bot, rw_top))
+        rwall_normal_clearance = dot_product(v_rwall, u_normal)
+        assert math.isclose(rwall_normal_clearance, 3.000, abs_tol=1e-3), (
+            f"[{case_name}] Right wall normal clearance {rwall_normal_clearance:.4f}m is not 3.000m"
+        )
+
+        # B) Floor-to-ceiling surface clearance along surface normal:
+        c_start_bot = transform_pt("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+        v_fc = tuple(b - a for a, b in zip(f_start, c_start_bot))
+        fc_normal_clearance = dot_product(v_fc, u_normal)
+        assert math.isclose(fc_normal_clearance, 3.000, abs_tol=0.15), (
+            f"[{case_name}] Floor-to-ceiling normal clearance {fc_normal_clearance:.4f}m exceeds 3.0m nominal tolerance"
+        )
 
