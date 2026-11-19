@@ -248,3 +248,152 @@ def test_assembled_world_ramp_and_upper_drift_connectivity():
     assert math.isclose(uc_bottom_z, upper_floor_top_z + 3.0, abs_tol=0.05), (
         f"Upper ceiling clearance {uc_bottom_z - upper_floor_top_z:.2f}m is not 3.0m"
     )
+
+
+def test_ramp_world_transformed_walls_and_ceiling_continuity():
+    """
+    Rigorously validates world-transformed endpoints for both ramp walls, floor, and ceiling:
+    - Transforms local SDF poses and box geometries into world coordinates using rotation matrices.
+    - Checks lower transition joint (x = 42.0m) against drift1_sec_d.
+    - Checks upper transition joint (x = 54.0m) against upper_drift_section.
+    - Validates left wall inner face (y = 1.750m) and right wall inner face (y = -1.750m).
+    - Validates floor elevations: lower (z = 0.000m) and upper (z = 3.215m).
+    - Validates ceiling bottom elevations: lower (z = 3.000m) and upper (z = 6.215m).
+    - Validates 3.0m normal ceiling clearance across the entire inclined ramp.
+    """
+    world_path = REPO_ROOT / "simulation" / "worlds" / "mine_world.sdf"
+    tree = ET.parse(world_path)
+
+    # 1. Lower Drift Adjoining Geometry (drift1_sec_d)
+    lower_drift = tree.find(".//model[@name='drift1_sec_d']")
+    assert lower_drift is not None
+    dl_floor = lower_drift.find(".//link[@name='floor']")
+    dl_l_wall = lower_drift.find(".//link[@name='left_wall']")
+    dl_r_wall = lower_drift.find(".//link[@name='right_wall']")
+    dl_ceil = lower_drift.find(".//link[@name='ceiling']")
+
+    dl_f_p = [float(v) for v in dl_floor.find("pose").text.split()]
+    dl_f_s = [float(v) for v in dl_floor.find(".//geometry/box/size").text.split()]
+    dl_lw_p = [float(v) for v in dl_l_wall.find("pose").text.split()]
+    dl_lw_s = [float(v) for v in dl_l_wall.find(".//geometry/box/size").text.split()]
+    dl_rw_p = [float(v) for v in dl_r_wall.find("pose").text.split()]
+    dl_rw_s = [float(v) for v in dl_r_wall.find(".//geometry/box/size").text.split()]
+    dl_c_p = [float(v) for v in dl_ceil.find("pose").text.split()]
+    dl_c_s = [float(v) for v in dl_ceil.find(".//geometry/box/size").text.split()]
+
+    lower_floor_top_z = dl_f_p[2] + dl_f_s[2] / 2.0         # 0.000m
+    lower_floor_end_x = dl_f_p[0] + dl_f_s[0] / 2.0         # 42.000m
+    lower_l_wall_inner_y = dl_lw_p[1] - dl_lw_s[1] / 2.0    # 1.750m
+    lower_r_wall_inner_y = dl_rw_p[1] + dl_rw_s[1] / 2.0    # -1.750m
+    lower_ceil_bot_z = dl_c_p[2] - dl_c_s[2] / 2.0          # 3.000m
+
+    # 2. Upper Drift Adjoining Geometry (upper_drift_section)
+    upper_drift = tree.find(".//model[@name='upper_drift_section']")
+    assert upper_drift is not None
+    ud_floor = upper_drift.find(".//link[@name='upper_floor']")
+    ud_l_wall = upper_drift.find(".//link[@name='upper_left_wall']")
+    ud_r_wall = upper_drift.find(".//link[@name='upper_right_wall']")
+    ud_ceil = upper_drift.find(".//link[@name='upper_ceiling']")
+
+    ud_f_p = [float(v) for v in ud_floor.find("pose").text.split()]
+    ud_f_s = [float(v) for v in ud_floor.find(".//geometry/box/size").text.split()]
+    ud_lw_p = [float(v) for v in ud_l_wall.find("pose").text.split()]
+    ud_lw_s = [float(v) for v in ud_l_wall.find(".//geometry/box/size").text.split()]
+    ud_rw_p = [float(v) for v in ud_r_wall.find("pose").text.split()]
+    ud_rw_s = [float(v) for v in ud_r_wall.find(".//geometry/box/size").text.split()]
+    ud_c_p = [float(v) for v in ud_ceil.find("pose").text.split()]
+    ud_c_s = [float(v) for v in ud_ceil.find(".//geometry/box/size").text.split()]
+
+    upper_floor_top_z = ud_f_p[2] + ud_f_s[2] / 2.0         # 3.215m
+    upper_floor_start_x = ud_f_p[0] - ud_f_s[0] / 2.0       # 53.900m
+    upper_l_wall_inner_y = ud_lw_p[1] - ud_lw_s[1] / 2.0    # 1.750m
+    upper_r_wall_inner_y = ud_rw_p[1] + ud_rw_s[1] / 2.0    # -1.750m
+    upper_ceil_bot_z = ud_c_p[2] - ud_c_s[2] / 2.0          # 6.215m
+
+    # 3. Ramp World Transformation Helper
+    ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
+    ramp_world_origin = (42.0, 0.0, 0.0)
+
+    def transform_ramp_point(link_name: str, local_dx: float, local_dy: float, local_dz: float):
+        link = ramp_tree.find(f".//link[@name='{link_name}']")
+        pose = [float(v) for v in link.find("pose").text.split()]
+        lx, ly, lz, _, pitch, _ = pose
+        cos_p = math.cos(pitch)
+        sin_p = math.sin(pitch)
+        # Rotation by pitch around Y: x' = x*cos + z*sin, y' = y, z' = -x*sin + z*cos
+        rx = local_dx * cos_p + local_dz * sin_p
+        ry = local_dy
+        rz = -local_dx * sin_p + local_dz * cos_p
+        return (ramp_world_origin[0] + lx + rx, ramp_world_origin[1] + ly + ry, ramp_world_origin[2] + lz + rz)
+
+    # 4. Ramp Floor Transformed Coordinates
+    rf_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_floor']//geometry/box/size").text.split()]
+    ramp_f_start = transform_ramp_point("ramp_floor", -rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+    ramp_f_end = transform_ramp_point("ramp_floor", rf_size[0] / 2.0, 0.0, rf_size[2] / 2.0)
+
+    # Floor continuity assertions
+    assert math.isclose(ramp_f_start[2], lower_floor_top_z, abs_tol=0.01), (
+        f"Ramp floor start z {ramp_f_start[2]:.4f}m does not match lower floor {lower_floor_top_z:.4f}m"
+    )
+    assert math.isclose(ramp_f_end[2], upper_floor_top_z, abs_tol=0.01), (
+        f"Ramp floor end z {ramp_f_end[2]:.4f}m does not match upper floor {upper_floor_top_z:.4f}m"
+    )
+    assert ramp_f_start[0] <= lower_floor_end_x + 0.02, "Gap between lower floor and ramp floor start"
+    assert upper_floor_start_x <= ramp_f_end[0] + 0.02, "Gap between ramp floor end and upper floor start"
+
+    # 5. Ramp Left Wall Transformed Coordinates (inner face: local_dy = -size[1]/2)
+    rw_l_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_left_wall']//geometry/box/size").text.split()]
+    ramp_lw_start = transform_ramp_point("ramp_left_wall", -rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, 0.0)
+    ramp_lw_end = transform_ramp_point("ramp_left_wall", rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, 0.0)
+
+    assert math.isclose(ramp_lw_start[1], 1.750, abs_tol=1e-3), f"Ramp left wall inner y is {ramp_lw_start[1]}, expected 1.75"
+    assert math.isclose(ramp_lw_end[1], 1.750, abs_tol=1e-3), f"Ramp left wall inner y is {ramp_lw_end[1]}, expected 1.75"
+    assert math.isclose(ramp_lw_start[1], lower_l_wall_inner_y, abs_tol=1e-3), "Left wall misaligned at lower joint"
+    assert math.isclose(ramp_lw_end[1], upper_l_wall_inner_y, abs_tol=1e-3), "Left wall misaligned at upper joint"
+    assert math.isclose(ramp_lw_start[0], 42.000, abs_tol=0.02), f"Left wall start x {ramp_lw_start[0]} != 42.0"
+    assert math.isclose(ramp_lw_end[0], 54.000, abs_tol=0.02), f"Left wall end x {ramp_lw_end[0]} != 54.0"
+
+    # 6. Ramp Right Wall Transformed Coordinates (inner face: local_dy = +size[1]/2)
+    rw_r_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_right_wall']//geometry/box/size").text.split()]
+    ramp_rw_start = transform_ramp_point("ramp_right_wall", -rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, 0.0)
+    ramp_rw_end = transform_ramp_point("ramp_right_wall", rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, 0.0)
+
+    assert math.isclose(ramp_rw_start[1], -1.750, abs_tol=1e-3), f"Ramp right wall inner y is {ramp_rw_start[1]}, expected -1.75"
+    assert math.isclose(ramp_rw_end[1], -1.750, abs_tol=1e-3), f"Ramp right wall inner y is {ramp_rw_end[1]}, expected -1.75"
+    assert math.isclose(ramp_rw_start[1], lower_r_wall_inner_y, abs_tol=1e-3), "Right wall misaligned at lower joint"
+    assert math.isclose(ramp_rw_end[1], upper_r_wall_inner_y, abs_tol=1e-3), "Right wall misaligned at upper joint"
+    assert math.isclose(ramp_rw_start[0], 42.000, abs_tol=0.02), f"Right wall start x {ramp_rw_start[0]} != 42.0"
+    assert math.isclose(ramp_rw_end[0], 54.000, abs_tol=0.02), f"Right wall end x {ramp_rw_end[0]} != 54.0"
+
+    # 7. Ramp Ceiling Transformed Coordinates (bottom surface: local_dz = -size[2]/2)
+    rc_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_ceiling']//geometry/box/size").text.split()]
+    ramp_c_start = transform_ramp_point("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+    ramp_c_end = transform_ramp_point("ramp_ceiling", rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+
+    # Ceiling vertical step at lower joint (|3.007 - 3.000| = 0.007m)
+    assert abs(ramp_c_start[2] - lower_ceil_bot_z) <= 0.02, (
+        f"Ceiling vertical step at lower transition: {abs(ramp_c_start[2] - lower_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
+    )
+    # Ceiling vertical step at upper joint (|6.222 - 6.215| = 0.007m)
+    assert abs(ramp_c_end[2] - upper_ceil_bot_z) <= 0.02, (
+        f"Ceiling vertical step at upper transition: {abs(ramp_c_end[2] - upper_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
+    )
+
+    # 8. Verify 15.0-degree Incline Consistency
+    dx_floor = ramp_f_end[0] - ramp_f_start[0]
+    dz_floor = ramp_f_end[2] - ramp_f_start[2]
+    measured_incline_deg = math.degrees(math.atan2(dz_floor, dx_floor))
+    assert math.isclose(measured_incline_deg, 15.0, abs_tol=0.1), (
+        f"Measured incline {measured_incline_deg:.2f} deg is not 15.0 deg"
+    )
+
+    # 9. Verify 3.0m Normal Ceiling Clearance along Incline
+    rf_link = ramp_tree.find(".//link[@name='ramp_floor']")
+    rc_link = ramp_tree.find(".//link[@name='ramp_ceiling']")
+    rf_z = float(rf_link.find("pose").text.split()[2])
+    rc_z = float(rc_link.find("pose").text.split()[2])
+    normal_clearance = (rc_z - rc_size[2] / 2.0) - (rf_z + rf_size[2] / 2.0)
+    assert math.isclose(normal_clearance, 3.000, abs_tol=0.01), (
+        f"Normal ceiling clearance along ramp {normal_clearance:.4f}m is not 3.000m"
+    )
+

@@ -31,11 +31,11 @@ This document provides formal technical specifications for each of the 14 projec
   - Build modular subterranean tunnel meshes with realistic rock wall textures and non-uniform cross-sections.
   - Implement configurable terrain patches (loose gravel, wet mud, 15-degree inclines).
   - Integrate environmental hazards (standing water, fallen timber obstacles, low-ceiling clearance zones).
-  - Implement distance- and wall-attenuation RF communication simulation plugin.
-- **Deliverables**: Gazebo world SDF packages (`mine_world.sdf`), procedural tunnel generation scripts, communication attenuation plugin, launch files.
-- **Testing Requirements**: World loads in Gazebo Sim at >= 30 Hz real-time factor; RF plugin correctly attenuates signal across rock pillars.
-- **Acceptance Criteria**: Simulated underground environment renders reliably without physics instability; robots spawn at designated mine portals.
-- **Completion Status**: `DONE`.
+  - Implement analytical distance- and wall-attenuation RF communication simulation model (Gazebo C++ plugin deferred to M6).
+- **Deliverables**: Gazebo world SDF packages (`mine_world.sdf`), procedural tunnel generation scripts, analytical RF communication model (`subterranean_rf_model.py`) and CLI tool (`simulate_rf_attenuation.py`), launch files.
+- **Testing Requirements**: World loads in Gazebo Sim headless at >= 30 Hz real-time factor; analytical RF model correctly calculates signal attenuation and packet drop across rock pillars and tunnel bends; ROS-Gazebo clock bridge synchronizes simulation time.
+- **Acceptance Criteria**: Simulated underground environment renders reliably without physics instability; observable simulation state advances; models spawn at designated mine coordinates.
+- **Completion Status**: `IN_PROGRESS` (Tasks M1-001 through M1-004 complete; Task M1-005 analytical model complete with runtime network plugin deferred to M6).
 
 ---
 

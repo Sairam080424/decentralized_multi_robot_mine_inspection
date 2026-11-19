@@ -16,6 +16,7 @@ from launch.actions import (
     RegisterEventHandler,
     SetEnvironmentVariable,
 )
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration, PythonExpression
@@ -66,7 +67,7 @@ def generate_launch_description():
         shell=True,
     )
 
-    # Bridge Gazebo simulation clock to ROS 2 /clock
+    # Bridge Gazebo simulation clock to ROS 2 /clock (controlled via bridge_clock argument)
     clock_bridge_process = ExecuteProcess(
         cmd=[
             "ros2", "run", "ros_gz_bridge", "parameter_bridge",
@@ -74,6 +75,7 @@ def generate_launch_description():
         ],
         output="screen",
         shell=False,
+        condition=IfCondition(LaunchConfiguration("bridge_clock")),
     )
 
     # Ensure entire launch (including bridge) shuts down when Gazebo exits

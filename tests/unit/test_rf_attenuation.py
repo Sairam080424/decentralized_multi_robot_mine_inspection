@@ -363,3 +363,187 @@ def test_arbitrary_custom_tunnel_topology():
     assert link_outside["is_connected"] is False
     assert link_outside["status"] == "OUTSIDE_MINE_BOUNDS"
 
+
+# ==============================================================================
+# Refined Topology Path-Distance and Multi-Route Regression Tests
+# ==============================================================================
+
+def test_topology_two_endpoints_same_straight_edge():
+    """Verify route distance and zero bends for two endpoints on the same straight edge."""
+    topo = TunnelTopology()
+    topo.add_node("n1", (0.0, 0.0, 0.0))
+    topo.add_node("n2", (50.0, 0.0, 0.0))
+    topo.add_edge("n1", "n2", "corridor_1", width=3.5, height=3.0)
+
+    p1 = (10.0, 0.0, 0.5)
+    p2 = (35.0, 0.0, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: along-edge distance |35 - 10| = 25.0m, zero bends
+    expected_dist = 25.0
+    expected_corners = 0
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3), f"Expected {expected_dist}m, got {dist}m"
+    assert corners == expected_corners, f"Expected {expected_corners} corners, got {corners}"
+
+
+def test_topology_two_endpoints_different_connected_edges():
+    """Verify route distance when endpoints are on two connected edges sharing a junction."""
+    topo = TunnelTopology()
+    topo.add_node("west", (0.0, 0.0, 0.0))
+    topo.add_node("junc", (20.0, 0.0, 0.0))
+    topo.add_node("north", (20.0, 30.0, 0.0))
+    topo.add_edge("west", "junc", "west_drift", width=3.5, height=3.0)
+    topo.add_edge("junc", "north", "north_crosscut", width=3.5, height=3.0)
+
+    p1 = (20.0, 0.0, 0.5)   # exactly at junction
+    p2 = (20.0, 30.0, 0.5)  # at north end
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    expected_dist = 30.0
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3)
+    assert corners == 0
+
+
+def test_topology_endpoints_at_intermediate_edge_positions():
+    """Verify route distance and bend detection when endpoints are at intermediate positions along edges."""
+    topo = TunnelTopology()
+    topo.add_node("start_n", (0.0, 0.0, 0.0))
+    topo.add_node("junction", (20.0, 0.0, 0.0))
+    topo.add_node("end_n", (20.0, 30.0, 0.0))
+    topo.add_edge("start_n", "junction", "drift_a", width=3.5, height=3.0)
+    topo.add_edge("junction", "end_n", "crosscut_b", width=3.5, height=3.0)
+
+    p1 = (12.0, 0.0, 0.5)   # 8m remaining along drift_a to junction (20.0, 0.0)
+    p2 = (20.0, 15.0, 0.5)  # 15m remaining along crosscut_b from junction (20.0, 0.0)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: (20 - 12) + (15 - 0) = 8 + 15 = 23.0m
+    expected_dist = 23.0
+    expected_corners = 1
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3), f"Expected {expected_dist}m, got {dist}m"
+    assert corners == expected_corners, f"Expected {expected_corners} corner, got {corners}"
+
+
+def test_topology_route_one_90_degree_bend():
+    """Verify independent path distance and 90-degree corner detection."""
+    topo = TunnelTopology()
+    topo.add_node("n0", (0.0, 0.0, 0.0))
+    topo.add_node("n1", (30.0, 0.0, 0.0))
+    topo.add_node("n2", (30.0, 40.0, 0.0))
+    topo.add_edge("n0", "n1", "seg1", width=3.5, height=3.0)
+    topo.add_edge("n1", "n2", "seg2", width=3.5, height=3.0)
+
+    p1 = (5.0, 0.0, 0.5)
+    p2 = (30.0, 25.0, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: (30 - 5) + (25 - 0) = 25 + 25 = 50.0m
+    expected_dist = 50.0
+    expected_corners = 1
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3)
+    assert corners == expected_corners
+
+
+def test_topology_route_two_successive_bends():
+    """Verify independent path distance and two successive 90-degree bend detections."""
+    topo = TunnelTopology()
+    topo.add_node("a", (0.0, 0.0, 0.0))
+    topo.add_node("b", (20.0, 0.0, 0.0))
+    topo.add_node("c", (20.0, 20.0, 0.0))
+    topo.add_node("d", (50.0, 20.0, 0.0))
+    topo.add_edge("a", "b", "e1", width=3.5, height=3.0)
+    topo.add_edge("b", "c", "e2", width=3.5, height=3.0)
+    topo.add_edge("c", "d", "e3", width=3.5, height=3.0)
+
+    p1 = (5.0, 0.0, 0.5)    # 15m to b
+    p2 = (35.0, 20.0, 0.5)  # 15m from c
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: 15 (e1) + 20 (e2) + 15 (e3) = 50.0m
+    expected_dist = 50.0
+    expected_corners = 2
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3)
+    assert corners == expected_corners
+
+
+def test_topology_multiple_possible_routes_shortest_selection():
+    """Verify that shortest_path selects the shorter of two available route options in a loop graph."""
+    topo = TunnelTopology()
+    # Square corridor loop of perimeter 140m:
+    # A (0,0) -[40m]- B (40,0) -[30m]- C (40,30) -[40m]- D (0,30) -[30m]- A
+    topo.add_node("A", (0.0, 0.0, 0.0))
+    topo.add_node("B", (40.0, 0.0, 0.0))
+    topo.add_node("C", (40.0, 30.0, 0.0))
+    topo.add_node("D", (0.0, 30.0, 0.0))
+    topo.add_edge("A", "B", "AB", width=3.5, height=3.0)
+    topo.add_edge("B", "C", "BC", width=3.5, height=3.0)
+    topo.add_edge("C", "D", "CD", width=3.5, height=3.0)
+    topo.add_edge("D", "A", "DA", width=3.5, height=3.0)
+
+    # P1 on AB at (5, 0), P2 on DA at (0, 10)
+    # Option 1 (via A): P1 -> A (5m) + A -> P2 (10m) = 15m, 1 bend at A (90 deg)
+    # Option 2 (via B, C, D): P1 -> B (35m) + BC (30m) + CD (40m) + D -> P2 (20m) = 125m, 3 bends
+    p1 = (5.0, 0.0, 0.0)
+    p2 = (0.0, 10.0, 0.0)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    expected_dist = 15.0
+    expected_corners = 1
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3), f"Shortest route should be 15m, got {dist}m"
+    assert corners == expected_corners, f"Expected 1 corner along shortest route, got {corners}"
+
+
+def test_topology_disconnected_graph():
+    """Verify that a disconnected graph returns infinite path distance and signals topology disconnection."""
+    topo = TunnelTopology()
+    # Island 1: A to B
+    topo.add_node("A", (0.0, 0.0, 0.0))
+    topo.add_node("B", (20.0, 0.0, 0.0))
+    topo.add_edge("A", "B", "island1", width=3.5, height=3.0)
+
+    # Island 2: C to D (unconnected to Island 1)
+    topo.add_node("C", (50.0, 0.0, 0.0))
+    topo.add_node("D", (70.0, 0.0, 0.0))
+    topo.add_edge("C", "D", "island2", width=3.5, height=3.0)
+
+    p1 = (10.0, 0.0, 0.5)
+    p2 = (60.0, 0.0, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    assert math.isinf(dist), "Distance between disconnected graph components must be inf"
+    assert corners >= 90, "Disconnected components must report invalid/threshold corner count"
+
+    # In model evaluation, disconnected components must yield disconnected status
+    model = SubterraneanRFModel(topology=topo, wall_segments=[((30.0, -10.0), (30.0, 10.0))])
+    link = model.evaluate_link(p1, p2)
+    assert link["is_connected"] is False
+    assert link["packet_loss_rate"] == 1.0
+    assert link["status"] == "DISCONNECTED_TOPOLOGY"
+
+
+def test_topology_new_layout_different_coordinates():
+    """Verify topology calculation on a new layout with negative and non-standard coordinates."""
+    topo = TunnelTopology()
+    topo.add_node("N1", (-150.0, -200.0, 10.0))
+    topo.add_node("N2", (-100.0, -200.0, 10.0))
+    topo.add_node("N3", (-100.0, -150.0, 10.0))
+    topo.add_node("N4", (-50.0, -150.0, 10.0))
+
+    topo.add_edge("N1", "N2", "neg_seg1", width=3.5, height=3.0)  # L = 50m
+    topo.add_edge("N2", "N3", "neg_seg2", width=3.5, height=3.0)  # L = 50m
+    topo.add_edge("N3", "N4", "neg_seg3", width=3.5, height=3.0)  # L = 50m
+
+    # P1 on neg_seg1 at (-120, -200) -> 20m to N2
+    # N2 to N3 is 50m
+    # P2 on neg_seg3 at (-70, -150) -> 30m from N3
+    # Total expected: 20 + 50 + 30 = 100.0m, 2 bends (at N2 and N3)
+    p1 = (-120.0, -200.0, 10.5)
+    p2 = (-70.0, -150.0, 10.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    expected_dist = 100.0
+    expected_corners = 2
+    assert math.isclose(dist, expected_dist, abs_tol=1e-3), f"Expected {expected_dist}m, got {dist}m"
+    assert corners == expected_corners, f"Expected {expected_corners} corners, got {corners}"
+
+

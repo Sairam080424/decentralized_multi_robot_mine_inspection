@@ -13,6 +13,7 @@ Verifies:
 """
 
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -34,6 +35,41 @@ def get_gz_env() -> dict:
     env["GZ_SIM_RESOURCE_PATH"] = f"{MODELS_DIR}:{WORLDS_DIR}:{env.get('GZ_SIM_RESOURCE_PATH', '')}"
     env["SDF_PATH"] = f"{MODELS_DIR}:{env.get('SDF_PATH', '')}"
     return env
+
+
+def query_simulation_stats(env: dict) -> dict:
+    """
+    Queries /stats topic from running Gazebo Sim and numerically parses sim_time and iterations.
+    Returns:
+        {'sec': int, 'nsec': int, 'sim_time': float, 'iterations': int}
+    """
+    res = subprocess.run(
+        ["gz", "topic", "-e", "-t", "/stats", "-n", "1"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert res.returncode == 0, f"Failed to query /stats topic: {res.stderr}"
+    out = res.stdout
+
+    time_match = re.search(r"sim_time\s*\{[^}]*sec:\s*(\d+)[^}]*nsec:\s*(\d+)", out, re.DOTALL)
+    iter_match = re.search(r"iterations:\s*(\d+)", out)
+
+    assert time_match is not None, f"sim_time block missing from /stats output:\n{out}"
+    assert iter_match is not None, f"iterations field missing from /stats output:\n{out}"
+
+    sec = int(time_match.group(1))
+    nsec = int(time_match.group(2))
+    sim_time = sec + nsec * 1e-9
+    iterations = int(iter_match.group(1))
+
+    return {
+        "sec": sec,
+        "nsec": nsec,
+        "sim_time": sim_time,
+        "iterations": iterations,
+    }
 
 
 def test_headless_simulation_physics_stability():
@@ -70,10 +106,11 @@ def test_headless_simulation_physics_stability():
 def test_headless_simulation_observable_state_and_lifecycle():
     """
     Verify observable state of running Gazebo Sim instance:
-    - Active topics (/clock, /stats, /world/mine_world/clock)
-    - Simulation time progression (sim_time > 0, iterations > 0)
+    - Active topics (/clock, /stats, /world/mine_world/clock, /world/mine_world/state)
+    - Numeric simulation time progression over measurable interval (sim_time_2 > sim_time_1)
+    - Numeric iteration progression (iterations_2 > iterations_1)
     - Entity presence (models loaded in simulation world)
-    - Clean lifecycle shutdown
+    - Clean lifecycle shutdown via SIGINT
     """
     if shutil.which("gz") is None:
         pytest.skip("gz CLI tool not found on system PATH")
@@ -91,7 +128,7 @@ def test_headless_simulation_observable_state_and_lifecycle():
 
     try:
         # Allow Gazebo Sim to initialize world and start publishing
-        time.sleep(4.0)
+        time.sleep(3.5)
         assert proc.poll() is None, f"Gazebo exited prematurely with code {proc.returncode}"
 
         # 1. Verify Published Topics
@@ -115,28 +152,29 @@ def test_headless_simulation_observable_state_and_lifecycle():
         for exp in expected_topics:
             assert any(exp in t for t in topics), f"Expected topic '{exp}' not found in: {topics}"
 
-        # 2. Verify Simulation Time Advancement via /stats or /clock
-        stats_proc = subprocess.run(
-            ["gz", "topic", "-e", "-t", "/stats", "-n", "1"],
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=10,
+        # 2. Capture Initial Observable Simulation State (T1)
+        state_1 = query_simulation_stats(env)
+        assert state_1["sim_time"] > 0.0, f"Initial sim_time must be positive, got {state_1['sim_time']}"
+        assert state_1["iterations"] > 0, f"Initial iterations must be positive, got {state_1['iterations']}"
+
+        # Measurable delay interval
+        time.sleep(2.0)
+
+        # 3. Capture Advanced Observable Simulation State (T2)
+        state_2 = query_simulation_stats(env)
+        delta_sim_time = state_2["sim_time"] - state_1["sim_time"]
+        delta_iterations = state_2["iterations"] - state_1["iterations"]
+
+        assert delta_sim_time >= 1.0, (
+            f"Simulation time did not progress sufficiently over 2.0s real time interval: "
+            f"T1={state_1['sim_time']:.3f}s, T2={state_2['sim_time']:.3f}s, delta={delta_sim_time:.3f}s"
         )
-        assert stats_proc.returncode == 0, f"gz topic -e failed: {stats_proc.stderr}"
-        stats_out = stats_proc.stdout
+        assert delta_iterations >= 1000, (
+            f"Simulation iterations did not advance sufficiently: "
+            f"iter1={state_1['iterations']}, iter2={state_2['iterations']}, delta={delta_iterations}"
+        )
 
-        # Verify positive iteration count or sim_time progression
-        assert "sim_time" in stats_out, f"sim_time missing from /stats output: {stats_out}"
-        assert "iterations:" in stats_out, f"iterations missing from /stats output: {stats_out}"
-
-        # Parse iterations to verify > 0
-        iter_line = [line for line in stats_out.splitlines() if "iterations:" in line]
-        if iter_line:
-            iters = int(iter_line[0].split("iterations:")[1].strip())
-            assert iters > 0, f"Simulation iterations did not advance: {iters}"
-
-        # 3. Verify Model Entity Presence
+        # 4. Verify Model Entity Presence
         models_proc = subprocess.run(
             ["gz", "model", "--list"],
             env=env,
@@ -159,7 +197,7 @@ def test_headless_simulation_observable_state_and_lifecycle():
             assert model in models_out, f"Expected model '{model}' missing from simulation world: {models_out}"
 
     finally:
-        # 4. Clean Shutdown Lifecycle
+        # 5. Clean Shutdown Lifecycle
         if proc.poll() is None:
             proc.send_signal(signal.SIGINT)
             try:

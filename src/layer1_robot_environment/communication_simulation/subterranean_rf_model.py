@@ -10,6 +10,11 @@ Analytical, geometry-based subterranean RF propagation model:
 - Computes distance-dependent path loss, corner diffraction, obstacle shadowing,
   packet loss via sigmoid link margin, jittered latency, and bandwidth shaping.
 - Configurable dynamically from YAML (config/simulation/rf_attenuation_config.yaml).
+
+Note: Numerical attenuation parameters (such as 18.0 dB per corner diffraction loss
+and 12.0 dB obstacle shadow loss) are provisional engineering design assumptions
+for simulation link evaluation, not physically calibrated in-situ underground RF measurements.
+Full Gazebo C++ system plugin integration and dynamic Linux traffic shaping are planned for Milestone M6.
 """
 
 import math
@@ -143,7 +148,8 @@ class TunnelTopology:
     ) -> Tuple[float, int, List[str]]:
         """
         Calculates waveguide path distance and counts tunnel bends (>= 45 degrees)
-        through the topological tunnel network.
+        through the topological tunnel network. Projects endpoints onto nearest corridor edges,
+        computes remaining edge distances, and identifies the shortest graph-traversing route.
         Returns:
             (total_path_distance, corner_count, node_sequence)
         """
@@ -153,12 +159,9 @@ class TunnelTopology:
         # Case 1: Both points project onto the same tunnel edge
         if edge_a is not None and edge_b is not None and edge_a == edge_b:
             u, v = edge_a
-            ux, uy, uz = self.nodes[u]
-            vx, vy, vz = self.nodes[v]
-            edge_len = math.sqrt((vx - ux)**2 + (vy - uy)**2 + (vz - uz)**2)
+            edge_len = math.dist(self.nodes[u], self.nodes[v])
             seg_dist = abs(t_a - t_b) * edge_len
-            total_dist = d_perp_a + seg_dist + d_perp_b
-            return total_dist, 0, [u, v]
+            return seg_dist, 0, [u, v]
 
         # Dijkstra helper on graph
         import heapq
@@ -195,47 +198,62 @@ class TunnelTopology:
                 return float("inf"), []
             return dist[dst], path
 
-        # Determine entry nodes from edge_a and exit nodes to edge_b
-        candidate_entries = list(edge_a) if edge_a else list(self.nodes.keys())[:1]
-        candidate_exits = list(edge_b) if edge_b else list(self.nodes.keys())[:1]
+        # Determine edge endpoints and lengths
+        u_a, v_a = edge_a if edge_a else (None, None)
+        u_b, v_b = edge_b if edge_b else (None, None)
+
+        L_a = math.dist(self.nodes[u_a], self.nodes[v_a]) if edge_a else 0.0
+        L_b = math.dist(self.nodes[u_b], self.nodes[v_b]) if edge_b else 0.0
+
+        candidate_entries = [u_a, v_a] if edge_a else list(self.nodes.keys())[:1]
+        candidate_exits = [u_b, v_b] if edge_b else list(self.nodes.keys())[:1]
 
         best_total_dist = float("inf")
         best_full_nodes: List[str] = []
 
         for n_in in candidate_entries:
-            pos_in = self.nodes[n_in]
-            d_start_to_in = math.sqrt(
-                (start_pos[0] - pos_in[0])**2 + (start_pos[1] - pos_in[1])**2 + (start_pos[2] - pos_in[2])**2
-            )
+            # Remaining distance along edge_a from projection to candidate entry node
+            if edge_a:
+                d_edge_in = t_a * L_a if n_in == u_a else (1.0 - t_a) * L_a
+            else:
+                d_edge_in = math.dist(start_pos, self.nodes[n_in])
+
             for n_out in candidate_exits:
-                pos_out = self.nodes[n_out]
-                d_out_to_end = math.sqrt(
-                    (end_pos[0] - pos_out[0])**2 + (end_pos[1] - pos_out[1])**2 + (end_pos[2] - pos_out[2])**2
-                )
-                g_dist, g_nodes = dijkstra_between(n_in, n_out)
-                cand_total = d_start_to_in + g_dist + d_out_to_end
+                # Remaining distance along edge_b from candidate exit node to projection
+                if edge_b:
+                    d_edge_out = t_b * L_b if n_out == u_b else (1.0 - t_b) * L_b
+                else:
+                    d_edge_out = math.dist(self.nodes[n_out], end_pos)
+
+                if n_in == n_out:
+                    g_dist = 0.0
+                    g_nodes = [n_in]
+                else:
+                    g_dist, g_nodes = dijkstra_between(n_in, n_out)
+
+                if math.isinf(g_dist):
+                    continue
+
+                cand_total = d_edge_in + g_dist + d_edge_out
                 if cand_total < best_total_dist:
                     best_total_dist = cand_total
                     best_full_nodes = g_nodes
 
+        # Disconnected graph or unroutable
         if not best_full_nodes or math.isinf(best_total_dist):
-            euclid = math.sqrt(
-                (start_pos[0] - end_pos[0])**2 + (start_pos[1] - end_pos[1])**2 + (start_pos[2] - end_pos[2])**2
-            )
-            return euclid, 0, []
+            return float("inf"), 99, []
 
-        # Construct waypoint sequence to evaluate angles
-        waypoints: List[Tuple[float, float, float]] = [start_pos]
+        # Construct waypoint sequence along the selected tunnel route
+        waypoints: List[Tuple[float, float, float]] = [start_pos, proj_a]
         for nid in best_full_nodes:
-            pt = self.nodes[nid]
-            waypoints.append(pt)
+            waypoints.append(self.nodes[nid])
+        waypoints.append(proj_b)
         waypoints.append(end_pos)
 
-        # Collapse consecutive points that have negligible horizontal distance (< 0.2m)
+        # Collapse consecutive waypoints with distance < 0.15m
         collapsed_wps: List[Tuple[float, float, float]] = [waypoints[0]]
         for pt in waypoints[1:]:
-            d_xy = math.sqrt((pt[0] - collapsed_wps[-1][0])**2 + (pt[1] - collapsed_wps[-1][1])**2)
-            if d_xy > 0.2:
+            if math.dist(pt, collapsed_wps[-1]) > 0.15:
                 collapsed_wps.append(pt)
 
         # Count tunnel bends (>= 45 degrees) along horizontal corridor headings
@@ -248,10 +266,10 @@ class TunnelTopology:
             v1 = (p_curr[0] - p_prev[0], p_curr[1] - p_prev[1])
             v2 = (p_next[0] - p_curr[0], p_next[1] - p_curr[1])
 
-            len1 = math.sqrt(v1[0]**2 + v1[1]**2)
-            len2 = math.sqrt(v2[0]**2 + v2[1]**2)
+            len1 = math.hypot(v1[0], v1[1])
+            len2 = math.hypot(v2[0], v2[1])
 
-            if len1 > 0.2 and len2 > 0.2:
+            if len1 > 0.15 and len2 > 0.15:
                 dot = (v1[0]*v2[0] + v1[1]*v2[1]) / (len1 * len2)
                 dot = max(-1.0, min(1.0, dot))
                 angle_deg = math.degrees(math.acos(dot))
@@ -654,8 +672,25 @@ class SubterraneanRFModel:
         if has_los or "BLOCKED_BY_OBSTACLE" in reason:
             path_dist = euclid_dist
         else:
-            topo_dist, _, _ = self.topology.shortest_path(pos_a, pos_b)
+            topo_dist, topo_corners, _ = self.topology.shortest_path(pos_a, pos_b)
             path_dist = max(euclid_dist, topo_dist)
+            corner_count = topo_corners
+
+        # Handle disconnected graph or unroutable topology
+        if math.isinf(path_dist) or corner_count >= 90:
+            return {
+                "distance_m": round(euclid_dist, 2),
+                "path_distance_m": float("inf"),
+                "has_line_of_sight": False,
+                "corner_count": corner_count,
+                "rssi_dbm": -120.0,
+                "packet_loss_rate": 1.0,
+                "latency_ms": float("inf"),
+                "effective_bandwidth_kbps": 0.0,
+                "is_connected": False,
+                "status": "DISCONNECTED_TOPOLOGY",
+                "classification_reason": "DISCONNECTED_TOPOLOGY",
+            }
 
         # 4. Path Loss and Attenuation
         path_loss_db = self.reference_loss_db + 10.0 * self.path_loss_exponent * math.log10(
