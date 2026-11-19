@@ -512,7 +512,11 @@ def test_ramp_transformation_with_nonzero_world_orientation():
     3. Corridor longitudinal and transverse wall directions are perpendicular (dot product ~ 0)
        for both left and right walls.
     4. Clearance is verified for wall boundaries along surface normal (3.000m exact)
-       and floor-to-ceiling surface separation at matching longitudinal coordinates (2.999m exact within 0.005m).
+       and floor-to-ceiling surface separation projected along upright link normal (2.8883m within 0.005m).
+    5. Floor and ceiling links have matching orientations (rf_pose[3:] == rc_pose[3:]) and sampled points
+       use matching link-local longitudinal and transverse coordinates (x=0, y=0).
+    6. Alignment check verifies wall vectors are strictly parallel to the upright direction (1.0000)
+       and floor-to-ceiling separation vector aligns with upright link normal (~0.9601).
     """
     ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
 
@@ -640,29 +644,78 @@ def test_ramp_transformation_with_nonzero_world_orientation():
             f"[{case_name}] Right wall normal clearance {rwall_normal_clearance:.4f}m is not 3.000m"
         )
 
-        # B) Floor-to-ceiling surface separation at matching longitudinal coordinates:
+        # B) Floor-to-ceiling surface separation and alignment:
         # In tunnel_ramp_15deg/model.sdf, both ramp_floor and ramp_ceiling have identical pitch (-15 deg)
         # and identical link center longitudinal coordinates (x=6.0m).
-        # Nominal vertical surface separation from SDF link poses and geometries:
-        # (rc_pose_z - rc_size_z/2) - (rf_pose_z + rf_size_z/2) = 4.808 - 0.200 - (1.559 + 0.050) = 2.999m.
         rc_link = ramp_tree.find(".//link[@name='ramp_ceiling']")
         rc_pose = [float(v) for v in rc_link.find("pose").text.split()]
-        expected_surface_sep = (rc_pose[2] - rc_size[2] / 2.0) - (rf_pose[2] + rf_size[2] / 2.0)
 
-        u_upright = mat_vec_mul(world_rot, (0.0, 0.0, 1.0))
-        p_floor_inner_model = (rf_pose[0], rf_pose[1], rf_pose[2] + rf_size[2] / 2.0)
-        p_ceil_inner_model = (rc_pose[0], rc_pose[1], rc_pose[2] - rc_size[2] / 2.0)
-        p_floor_inner_world = apply_transform(world_rot, world_origin, p_floor_inner_model)
-        p_ceil_inner_world = apply_transform(world_rot, world_origin, p_ceil_inner_model)
-
-        v_fc = tuple(b - a for a, b in zip(p_floor_inner_world, p_ceil_inner_world))
-        fc_upright_clearance = dot_product(v_fc, u_upright)
-
-        # Assert matching surface separation is exactly 2.999m within tight 0.005m tolerance:
-        assert math.isclose(fc_upright_clearance, 2.999, abs_tol=0.005), (
-            f"[{case_name}] Floor-to-ceiling clearance {fc_upright_clearance:.4f}m is not 2.999m"
+        # 5. Verify that floor and ceiling links have matching orientations (rf_pose[3:] == rc_pose[3:])
+        # and that sampled points use matching link-local longitudinal and transverse coordinates (x=0, y=0).
+        assert rf_pose[3:] == rc_pose[3:], (
+            f"[{case_name}] Ramp floor orientation {rf_pose[3:]} != ceiling orientation {rc_pose[3:]}"
         )
-        assert math.isclose(fc_upright_clearance, expected_surface_sep, abs_tol=1e-5), (
-            f"[{case_name}] Clearance {fc_upright_clearance:.4f}m does not match expected {expected_surface_sep:.4f}m"
+
+        # 1. Construct actual floor inner-surface point using transform_pt:
+        # Link-local offset: dx=0.0, dy=0.0, dz = +rf_size[2]/2.0 (inner top surface)
+        p_floor_inner_world = transform_pt("ramp_floor", 0.0, 0.0, rf_size[2] / 2.0)
+
+        # 2. Construct actual ceiling inner-surface point using transform_pt:
+        # Link-local offset: dx=0.0, dy=0.0, dz = -rc_size[2]/2.0 (inner bottom surface)
+        p_ceil_inner_world = transform_pt("ramp_ceiling", 0.0, 0.0, -rc_size[2] / 2.0)
+
+        # 3. Calculate upright direction using both link rotation and world rotation:
+        u_rf_link = euler_to_matrix(rf_pose[3], rf_pose[4], rf_pose[5])
+        u_upright_model = mat_vec_mul(u_rf_link, (0.0, 0.0, 1.0))
+        u_upright_world = normalize(mat_vec_mul(world_rot, u_upright_model))
+
+        # 4. Calculate actual separation vector v_fc and project it onto u_upright_world:
+        v_fc = tuple(b - a for a, b in zip(p_floor_inner_world, p_ceil_inner_world))
+        fc_clearance_proj = dot_product(v_fc, u_upright_world)
+
+        # 6. Alignment check between separation vector v_fc and upright directions:
+        u_fc = normalize(v_fc)
+        alignment_dot = dot_product(u_fc, u_upright_world)
+
+        # Wall inner face height vector alignment with upright direction (strictly parallel: 1.0000):
+        u_vwall = normalize(v_wall)
+        wall_alignment = dot_product(u_vwall, u_upright_world)
+        assert math.isclose(wall_alignment, 1.0000, abs_tol=1e-4), (
+            f"[{case_name}] Wall vector alignment with upright {wall_alignment:.6f} is not 1.0000"
+        )
+
+        # Theoretical expected projected clearance and alignment:
+        # delta_z_link_origins = rc_pose[2] - rf_pose[2] = 4.808 - 1.559 = 3.249m
+        # Projected clearance along link surface normal:
+        # expected_proj = (rc_pose[2] - rf_pose[2]) * cos(pitch) - (rc_size[2] + rf_size[2]) / 2.0 = 2.8883m
+        dz_origins = rc_pose[2] - rf_pose[2]
+        pitch_ramp = rf_pose[4]
+        h_half_sum = (rc_size[2] + rf_size[2]) / 2.0
+        expected_proj = dz_origins * math.cos(pitch_ramp) - h_half_sum
+        v_link_x = -dz_origins * math.sin(pitch_ramp)
+        v_link_z = expected_proj
+        expected_alignment = v_link_z / math.sqrt(v_link_x**2 + v_link_z**2)
+
+        # Check alignment dot product matches theoretical alignment (~0.9601, ~16.23 deg tilt):
+        assert math.isclose(alignment_dot, expected_alignment, abs_tol=1e-5), (
+            f"[{case_name}] Alignment dot {alignment_dot:.6f} != expected {expected_alignment:.6f}"
+        )
+        assert math.isclose(alignment_dot, 0.9601, abs_tol=0.005), (
+            f"[{case_name}] Alignment dot {alignment_dot:.4f} is not ~0.9601"
+        )
+
+        # 7. Retain expected clearance and tight tolerance (<= 0.005 m):
+        assert math.isclose(fc_clearance_proj, 2.8883, abs_tol=0.005), (
+            f"[{case_name}] Floor-to-ceiling projected clearance {fc_clearance_proj:.4f}m is not 2.8883m"
+        )
+        assert math.isclose(fc_clearance_proj, expected_proj, abs_tol=1e-5), (
+            f"[{case_name}] Projected clearance {fc_clearance_proj:.6f}m != expected {expected_proj:.6f}m"
+        )
+
+        # Additionally, verify model vertical separation along model upright axis (2.999m nominal SDF origin difference):
+        # In SDF frame without link pitch: (rc_pose[2] - rc_size[2]/2) - (rf_pose[2] + rf_size[2]/2) = 2.999m
+        sdf_vertical_sep = (rc_pose[2] - rc_size[2] / 2.0) - (rf_pose[2] + rf_size[2] / 2.0)
+        assert math.isclose(sdf_vertical_sep, 2.999, abs_tol=0.001), (
+            f"[{case_name}] SDF nominal vertical separation {sdf_vertical_sep:.4f}m != 2.999m"
         )
 
