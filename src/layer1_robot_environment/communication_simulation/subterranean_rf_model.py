@@ -148,15 +148,27 @@ class TunnelTopology:
     ) -> Tuple[float, int, List[str]]:
         """
         Calculates waveguide path distance and counts tunnel bends (>= 45 degrees)
-        through the topological tunnel network. Projects endpoints onto nearest corridor edges,
-        computes remaining edge distances, and identifies the shortest graph-traversing route.
+        through the topological tunnel network.
+
+        Path Distance Definition:
+            path_distance_m represents the longitudinal waveguide propagation distance along
+            tunnel centerlines between the orthogonally projected endpoints (proj_a and proj_b)
+            through the shortest graph route. Perpendicular/lateral offsets from the centerline
+            represent transverse positions within the drift cross-section (bounded by rock walls)
+            and do not add to longitudinal waveguide propagation distance.
+
+        Bend Counting Definition:
+            Tunnel bends are computed strictly from the sequence of corridor edge headings along
+            the selected tunnel graph route. Lateral/perpendicular endpoint offsets from the
+            centerline do not represent physical tunnel corners and do not alter the bend count.
+
         Returns:
             (total_path_distance, corner_count, node_sequence)
         """
         edge_a, t_a, proj_a, d_perp_a = self.find_nearest_edge_projection(start_pos)
         edge_b, t_b, proj_b, d_perp_b = self.find_nearest_edge_projection(end_pos)
 
-        # Case 1: Both points project onto the same tunnel edge
+        # Case 1: Both points project onto the same straight tunnel edge
         if edge_a is not None and edge_b is not None and edge_a == edge_b:
             u, v = edge_a
             edge_len = math.dist(self.nodes[u], self.nodes[v])
@@ -210,6 +222,8 @@ class TunnelTopology:
 
         best_total_dist = float("inf")
         best_full_nodes: List[str] = []
+        best_n_in: Optional[str] = None
+        best_n_out: Optional[str] = None
 
         for n_in in candidate_entries:
             # Remaining distance along edge_a from projection to candidate entry node
@@ -238,39 +252,48 @@ class TunnelTopology:
                 if cand_total < best_total_dist:
                     best_total_dist = cand_total
                     best_full_nodes = g_nodes
+                    best_n_in = n_in
+                    best_n_out = n_out
 
         # Disconnected graph or unroutable
-        if not best_full_nodes or math.isinf(best_total_dist):
+        if not best_full_nodes or math.isinf(best_total_dist) or best_n_in is None or best_n_out is None:
             return float("inf"), 99, []
 
-        # Construct waypoint sequence along the selected tunnel route
-        waypoints: List[Tuple[float, float, float]] = [start_pos, proj_a]
-        for nid in best_full_nodes:
-            waypoints.append(self.nodes[nid])
-        waypoints.append(proj_b)
-        waypoints.append(end_pos)
+        # Derive corridor edge headings along the selected tunnel route.
+        headings: List[Tuple[float, float]] = []
 
-        # Collapse consecutive waypoints with distance < 0.15m
-        collapsed_wps: List[Tuple[float, float, float]] = [waypoints[0]]
-        for pt in waypoints[1:]:
-            if math.dist(pt, collapsed_wps[-1]) > 0.15:
-                collapsed_wps.append(pt)
+        # Heading entering best_n_in along edge_a (only if path actually traverses edge_a)
+        if edge_a and math.dist(proj_a, self.nodes[best_n_in]) > 1e-3:
+            other_a = v_a if best_n_in == u_a else u_a
+            vx = self.nodes[best_n_in][0] - self.nodes[other_a][0]
+            vy = self.nodes[best_n_in][1] - self.nodes[other_a][1]
+            if math.hypot(vx, vy) > 1e-4:
+                headings.append((vx, vy))
 
-        # Count tunnel bends (>= 45 degrees) along horizontal corridor headings
+        # Intermediate edges along the graph shortest path
+        for k in range(len(best_full_nodes) - 1):
+            n1 = best_full_nodes[k]
+            n2 = best_full_nodes[k + 1]
+            vx = self.nodes[n2][0] - self.nodes[n1][0]
+            vy = self.nodes[n2][1] - self.nodes[n1][1]
+            if math.hypot(vx, vy) > 1e-4:
+                headings.append((vx, vy))
+
+        # Final heading leaving best_n_out along edge_b (only if path actually traverses edge_b)
+        if edge_b and math.dist(proj_b, self.nodes[best_n_out]) > 1e-3:
+            other_b = v_b if best_n_out == u_b else u_b
+            vx = self.nodes[other_b][0] - self.nodes[best_n_out][0]
+            vy = self.nodes[other_b][1] - self.nodes[best_n_out][1]
+            if math.hypot(vx, vy) > 1e-4:
+                headings.append((vx, vy))
+
+        # Count physical tunnel bends (>= 45 degrees) between consecutive corridor headings
         corners = 0
-        for i in range(1, len(collapsed_wps) - 1):
-            p_prev = collapsed_wps[i - 1]
-            p_curr = collapsed_wps[i]
-            p_next = collapsed_wps[i + 1]
-
-            v1 = (p_curr[0] - p_prev[0], p_curr[1] - p_prev[1])
-            v2 = (p_next[0] - p_curr[0], p_next[1] - p_curr[1])
-
-            len1 = math.hypot(v1[0], v1[1])
-            len2 = math.hypot(v2[0], v2[1])
-
-            if len1 > 0.15 and len2 > 0.15:
-                dot = (v1[0]*v2[0] + v1[1]*v2[1]) / (len1 * len2)
+        for (vx1, vy1), (vx2, vy2) in zip(headings[:-1], headings[1:]):
+            len1 = math.hypot(vx1, vy1)
+            len2 = math.hypot(vx2, vy2)
+            if len1 > 1e-4 and len2 > 1e-4:
+                dot = (vx1 * vx2 + vy1 * vy2) / (len1 * len2)
                 dot = max(-1.0, min(1.0, dot))
                 angle_deg = math.degrees(math.acos(dot))
                 if angle_deg >= 45.0:

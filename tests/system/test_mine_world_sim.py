@@ -37,27 +37,39 @@ def get_gz_env() -> dict:
     return env
 
 
-def query_simulation_stats(env: dict) -> dict:
+def query_simulation_stats(env: dict, topic: str = "/world/mine_world/stats") -> dict:
     """
-    Queries /stats topic from running Gazebo Sim and numerically parses sim_time and iterations.
+    Queries /world/mine_world/stats topic from running Gazebo Sim and numerically parses
+    sim_time and iterations. If the world-specific topic is not available, falls back to /stats.
     Returns:
-        {'sec': int, 'nsec': int, 'sim_time': float, 'iterations': int}
+        {'sec': int, 'nsec': int, 'sim_time': float, 'iterations': int, 'topic': str}
     """
     res = subprocess.run(
-        ["gz", "topic", "-e", "-t", "/stats", "-n", "1"],
+        ["gz", "topic", "-e", "-t", topic, "-n", "1"],
         env=env,
         capture_output=True,
         text=True,
         timeout=10,
     )
-    assert res.returncode == 0, f"Failed to query /stats topic: {res.stderr}"
+    if res.returncode != 0:
+        fallback_topic = "/stats"
+        res = subprocess.run(
+            ["gz", "topic", "-e", "-t", fallback_topic, "-n", "1"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert res.returncode == 0, f"Failed to query {topic} and {fallback_topic}: {res.stderr}"
+        topic = fallback_topic
+
     out = res.stdout
 
     time_match = re.search(r"sim_time\s*\{[^}]*sec:\s*(\d+)[^}]*nsec:\s*(\d+)", out, re.DOTALL)
     iter_match = re.search(r"iterations:\s*(\d+)", out)
 
-    assert time_match is not None, f"sim_time block missing from /stats output:\n{out}"
-    assert iter_match is not None, f"iterations field missing from /stats output:\n{out}"
+    assert time_match is not None, f"sim_time block missing from {topic} output:\n{out}"
+    assert iter_match is not None, f"iterations field missing from {topic} output:\n{out}"
 
     sec = int(time_match.group(1))
     nsec = int(time_match.group(2))
@@ -69,6 +81,7 @@ def query_simulation_stats(env: dict) -> dict:
         "nsec": nsec,
         "sim_time": sim_time,
         "iterations": iterations,
+        "topic": topic,
     }
 
 

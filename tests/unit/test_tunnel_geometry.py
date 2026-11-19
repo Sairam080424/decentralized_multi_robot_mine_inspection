@@ -311,8 +311,14 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     upper_ceil_bot_z = ud_c_p[2] - ud_c_s[2] / 2.0          # 6.215m
 
     # 3. Ramp World Transformation Helper
+    # Dynamically extract ramp model pose from mine_world.sdf rather than hard-coding
+    ramp_include = tree.find(".//include[name='ramp_15deg_section']")
+    assert ramp_include is not None, "ramp_15deg_section include not found in mine_world.sdf"
+    ramp_pose_tokens = [float(v) for v in ramp_include.find("pose").text.split()]
+    ramp_world_origin = tuple(ramp_pose_tokens[:3])
+    assert math.isclose(ramp_world_origin[0], 42.0, abs_tol=1e-3), f"Ramp world x origin is {ramp_world_origin[0]}, expected 42.0"
+
     ramp_tree = ET.parse(MODELS_DIR / "tunnel_ramp_15deg" / "model.sdf")
-    ramp_world_origin = (42.0, 0.0, 0.0)
 
     def transform_ramp_point(link_name: str, local_dx: float, local_dy: float, local_dz: float):
         link = ramp_tree.find(f".//link[@name='{link_name}']")
@@ -346,6 +352,7 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     ramp_lw_start = transform_ramp_point("ramp_left_wall", -rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, 0.0)
     ramp_lw_end = transform_ramp_point("ramp_left_wall", rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, 0.0)
 
+    # Left wall horizontal alignment
     assert math.isclose(ramp_lw_start[1], 1.750, abs_tol=1e-3), f"Ramp left wall inner y is {ramp_lw_start[1]}, expected 1.75"
     assert math.isclose(ramp_lw_end[1], 1.750, abs_tol=1e-3), f"Ramp left wall inner y is {ramp_lw_end[1]}, expected 1.75"
     assert math.isclose(ramp_lw_start[1], lower_l_wall_inner_y, abs_tol=1e-3), "Left wall misaligned at lower joint"
@@ -353,11 +360,23 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     assert math.isclose(ramp_lw_start[0], 42.000, abs_tol=0.02), f"Left wall start x {ramp_lw_start[0]} != 42.0"
     assert math.isclose(ramp_lw_end[0], 54.000, abs_tol=0.02), f"Left wall end x {ramp_lw_end[0]} != 54.0"
 
+    # Left wall vertical extents (verify wall covers drift height from floor to ceiling)
+    ramp_lw_start_bot = transform_ramp_point("ramp_left_wall", -rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, -rw_l_size[2] / 2.0)
+    ramp_lw_start_top = transform_ramp_point("ramp_left_wall", -rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, +rw_l_size[2] / 2.0)
+    ramp_lw_end_bot = transform_ramp_point("ramp_left_wall", rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, -rw_l_size[2] / 2.0)
+    ramp_lw_end_top = transform_ramp_point("ramp_left_wall", rw_l_size[0] / 2.0, -rw_l_size[1] / 2.0, +rw_l_size[2] / 2.0)
+
+    assert ramp_lw_start_bot[2] <= lower_floor_top_z + 0.10, "Left wall bottom does not reach lower floor level"
+    assert ramp_lw_start_top[2] >= lower_ceil_bot_z - 0.10, "Left wall top does not reach lower ceiling level"
+    assert ramp_lw_end_bot[2] <= upper_floor_top_z + 0.10, "Left wall bottom does not reach upper floor level"
+    assert ramp_lw_end_top[2] >= upper_ceil_bot_z - 0.10, "Left wall top does not reach upper ceiling level"
+
     # 6. Ramp Right Wall Transformed Coordinates (inner face: local_dy = +size[1]/2)
     rw_r_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_right_wall']//geometry/box/size").text.split()]
     ramp_rw_start = transform_ramp_point("ramp_right_wall", -rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, 0.0)
     ramp_rw_end = transform_ramp_point("ramp_right_wall", rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, 0.0)
 
+    # Right wall horizontal alignment
     assert math.isclose(ramp_rw_start[1], -1.750, abs_tol=1e-3), f"Ramp right wall inner y is {ramp_rw_start[1]}, expected -1.75"
     assert math.isclose(ramp_rw_end[1], -1.750, abs_tol=1e-3), f"Ramp right wall inner y is {ramp_rw_end[1]}, expected -1.75"
     assert math.isclose(ramp_rw_start[1], lower_r_wall_inner_y, abs_tol=1e-3), "Right wall misaligned at lower joint"
@@ -365,18 +384,72 @@ def test_ramp_world_transformed_walls_and_ceiling_continuity():
     assert math.isclose(ramp_rw_start[0], 42.000, abs_tol=0.02), f"Right wall start x {ramp_rw_start[0]} != 42.0"
     assert math.isclose(ramp_rw_end[0], 54.000, abs_tol=0.02), f"Right wall end x {ramp_rw_end[0]} != 54.0"
 
-    # 7. Ramp Ceiling Transformed Coordinates (bottom surface: local_dz = -size[2]/2)
+    # Right wall vertical extents (verify wall covers drift height from floor to ceiling)
+    ramp_rw_start_bot = transform_ramp_point("ramp_right_wall", -rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, -rw_r_size[2] / 2.0)
+    ramp_rw_start_top = transform_ramp_point("ramp_right_wall", -rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, +rw_r_size[2] / 2.0)
+    ramp_rw_end_bot = transform_ramp_point("ramp_right_wall", rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, -rw_r_size[2] / 2.0)
+    ramp_rw_end_top = transform_ramp_point("ramp_right_wall", rw_r_size[0] / 2.0, rw_r_size[1] / 2.0, +rw_r_size[2] / 2.0)
+
+    assert ramp_rw_start_bot[2] <= lower_floor_top_z + 0.10, "Right wall bottom does not reach lower floor level"
+    assert ramp_rw_start_top[2] >= lower_ceil_bot_z - 0.10, "Right wall top does not reach lower ceiling level"
+    assert ramp_rw_end_bot[2] <= upper_floor_top_z + 0.10, "Right wall bottom does not reach upper floor level"
+    assert ramp_rw_end_top[2] >= upper_ceil_bot_z - 0.10, "Right wall top does not reach upper ceiling level"
+
+    # 7. Ramp Ceiling Transformed Coordinates & Horizontal Continuity
     rc_size = [float(v) for v in ramp_tree.find(".//link[@name='ramp_ceiling']//geometry/box/size").text.split()]
-    ramp_c_start = transform_ramp_point("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
-    ramp_c_end = transform_ramp_point("ramp_ceiling", rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+    # Bottom surface vertices
+    ramp_c_start_bot = transform_ramp_point("ramp_ceiling", -rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+    ramp_c_end_bot = transform_ramp_point("ramp_ceiling", rc_size[0] / 2.0, 0.0, -rc_size[2] / 2.0)
+    # Centerline vertices
+    ramp_c_start_mid = transform_ramp_point("ramp_ceiling", -rc_size[0] / 2.0, 0.0, 0.0)
+    ramp_c_end_mid = transform_ramp_point("ramp_ceiling", rc_size[0] / 2.0, 0.0, 0.0)
+    # Top surface vertices
+    ramp_c_start_top = transform_ramp_point("ramp_ceiling", -rc_size[0] / 2.0, 0.0, rc_size[2] / 2.0)
+    ramp_c_end_top = transform_ramp_point("ramp_ceiling", rc_size[0] / 2.0, 0.0, rc_size[2] / 2.0)
+
+    # Adjoining ceiling boundary references:
+    lower_ceil_end_x = dl_c_p[0] + dl_c_s[0] / 2.0          # 42.000m
+    upper_ceil_start_x = ud_c_p[0] - ud_c_s[0] / 2.0        # 53.900m
+
+    # Horizontal Gap/Overlap Tolerances:
+    # A tilted rectangular box link (pitch -15 deg, thickness 0.400m) with square cuts
+    # creates a bevel horizontal offset of delta_x = (thickness/2)*sin(15 deg) = 0.0518m.
+    # Acceptable non-mitered square-cut horizontal gap tolerance: <= 0.060m (60mm).
+    # Acceptable collision geometry overlap tolerance: <= 0.200m (200mm, ensures no light/physics leaks).
+    MAX_CEILING_GAP_M = 0.060
+    MAX_CEILING_OVERLAP_M = 0.200
+
+    # Lower Joint Horizontal Continuity (x = 42.0m):
+    # Centerline matches joint boundary exactly:
+    assert math.isclose(ramp_c_start_mid[0], lower_ceil_end_x, abs_tol=0.01), (
+        f"Ramp ceiling centerline start x {ramp_c_start_mid[0]:.4f}m does not match lower joint {lower_ceil_end_x:.4f}m"
+    )
+    # Bottom corner horizontal gap <= 60mm:
+    lower_gap = ramp_c_start_bot[0] - lower_ceil_end_x
+    assert 0.0 <= lower_gap <= MAX_CEILING_GAP_M, (
+        f"Lower ceiling bottom horizontal gap {lower_gap:.4f}m exceeds tolerance ({MAX_CEILING_GAP_M}m)"
+    )
+    # Top corner overlaps lower ceiling:
+    assert ramp_c_start_top[0] <= lower_ceil_end_x, "Ramp ceiling top should overlap into lower drift"
+
+    # Upper Joint Horizontal Continuity (x = 54.0m):
+    # Centerline matches upper drift nominal joint:
+    assert math.isclose(ramp_c_end_mid[0], 54.000, abs_tol=0.01), (
+        f"Ramp ceiling centerline end x {ramp_c_end_mid[0]:.4f}m does not match nominal joint (54.0m)"
+    )
+    # Bottom corner overlaps upper drift ceiling (53.9m <= 54.052m) to prevent gaps:
+    upper_overlap = ramp_c_end_bot[0] - upper_ceil_start_x
+    assert 0.0 <= upper_overlap <= MAX_CEILING_OVERLAP_M, (
+        f"Upper ceiling horizontal overlap {upper_overlap:.4f}m exceeds tolerance ({MAX_CEILING_OVERLAP_M}m)"
+    )
 
     # Ceiling vertical step at lower joint (|3.007 - 3.000| = 0.007m)
-    assert abs(ramp_c_start[2] - lower_ceil_bot_z) <= 0.02, (
-        f"Ceiling vertical step at lower transition: {abs(ramp_c_start[2] - lower_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
+    assert abs(ramp_c_start_bot[2] - lower_ceil_bot_z) <= 0.02, (
+        f"Ceiling vertical step at lower transition: {abs(ramp_c_start_bot[2] - lower_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
     )
     # Ceiling vertical step at upper joint (|6.222 - 6.215| = 0.007m)
-    assert abs(ramp_c_end[2] - upper_ceil_bot_z) <= 0.02, (
-        f"Ceiling vertical step at upper transition: {abs(ramp_c_end[2] - upper_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
+    assert abs(ramp_c_end_bot[2] - upper_ceil_bot_z) <= 0.02, (
+        f"Ceiling vertical step at upper transition: {abs(ramp_c_end_bot[2] - upper_ceil_bot_z):.4f}m exceeds tolerance (0.02m)"
     )
 
     # 8. Verify 15.0-degree Incline Consistency

@@ -547,3 +547,115 @@ def test_topology_new_layout_different_coordinates():
     assert corners == expected_corners, f"Expected {expected_corners} corners, got {corners}"
 
 
+# ==============================================================================
+# REGRESSION TESTS: LATERAL ENDPOINT OFFSETS VS PHYSICAL CORRIDOR BENDS
+# ==============================================================================
+
+def test_topology_lateral_offsets_straight_corridor():
+    """
+    Verify that two laterally offset endpoints along a single straight corridor
+    do not introduce artificial bends.
+    """
+    topo = TunnelTopology()
+    topo.add_node("n0", (0.0, 0.0, 0.0))
+    topo.add_node("n1", (30.0, 0.0, 0.0))
+    topo.add_edge("n0", "n1", "corridor", width=3.5, height=3.0)
+
+    # Robot A driving near left wall (y=+1.2m), Robot B driving near right wall (y=-1.1m)
+    p1 = (5.0, 1.2, 0.5)
+    p2 = (25.0, -1.1, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Longitudinal waveguide distance is |25 - 5| = 20.0m; physical corners = 0
+    assert math.isclose(dist, 20.0, abs_tol=1e-3), f"Expected 20.0m, got {dist}m"
+    assert corners == 0, f"Expected 0 corners on straight corridor, got {corners}"
+
+
+def test_topology_lateral_offsets_across_connected_straight_edges():
+    """
+    Verify that a straight route traversing multiple connected collinear edges
+    does not introduce bends despite lateral robot offsets from the centerline.
+    """
+    topo = TunnelTopology()
+    topo.add_node("n0", (0.0, 0.0, 0.0))
+    topo.add_node("n1", (30.0, 0.0, 0.0))
+    topo.add_node("n2", (60.0, 0.0, 0.0))
+    topo.add_edge("n0", "n1", "seg1", width=3.5, height=3.0)
+    topo.add_edge("n1", "n2", "seg2", width=3.5, height=3.0)
+
+    # P1 on seg1 with y=+1.3m, P2 on seg2 with y=-1.4m
+    p1 = (20.0, 1.3, 0.5)
+    p2 = (40.0, -1.4, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: (30 - 20) + (40 - 30) = 20.0m along corridor; physical corners = 0
+    assert math.isclose(dist, 20.0, abs_tol=1e-3), f"Expected 20.0m, got {dist}m"
+    assert corners == 0, f"Expected 0 corners across collinear edges, got {corners}"
+
+
+def test_topology_lateral_offsets_one_actual_bend():
+    """
+    Verify that one actual 90-degree corner maintains corner_count=1
+    when endpoints are laterally offset from their respective centerlines.
+    """
+    topo = TunnelTopology()
+    topo.add_node("n0", (0.0, 0.0, 0.0))
+    topo.add_node("n1", (30.0, 0.0, 0.0))
+    topo.add_node("n2", (30.0, 40.0, 0.0))
+    topo.add_edge("n0", "n1", "drift", width=3.5, height=3.0)
+    topo.add_edge("n1", "n2", "crosscut", width=3.5, height=3.0)
+
+    # P1 on drift with y=+1.1m (centerline y=0)
+    # P2 on crosscut with x=31.2m (centerline x=30)
+    p1 = (20.0, 1.1, 0.5)
+    p2 = (31.2, 25.0, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected along-corridor distance: (30 - 20) + (25 - 0) = 35.0m; physical corners = 1
+    assert math.isclose(dist, 35.0, abs_tol=1e-3), f"Expected 35.0m, got {dist}m"
+    assert corners == 1, f"Expected exactly 1 corner for 90-deg turn, got {corners}"
+
+
+def test_topology_lateral_offsets_two_actual_bends():
+    """
+    Verify that two actual 90-degree corners maintain corner_count=2
+    when endpoints have arbitrary lateral offsets.
+    """
+    topo = TunnelTopology()
+    topo.add_node("a", (0.0, 0.0, 0.0))
+    topo.add_node("b", (30.0, 0.0, 0.0))
+    topo.add_node("c", (30.0, 20.0, 0.0))
+    topo.add_node("d", (10.0, 20.0, 0.0))
+    topo.add_edge("a", "b", "e1", width=3.5, height=3.0)
+    topo.add_edge("b", "c", "e2", width=3.5, height=3.0)
+    topo.add_edge("c", "d", "e3", width=3.5, height=3.0)
+
+    # P1 on e1 with y=+1.2m; P2 on e3 with y=19.1m (offset 0.9m from centerline y=20)
+    p1 = (25.0, 1.2, 0.5)
+    p2 = (15.0, 19.1, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    # Expected: (30 - 25) + 20 + (30 - 15) = 40.0m; physical corners = 2
+    assert math.isclose(dist, 40.0, abs_tol=1e-3), f"Expected 40.0m, got {dist}m"
+    assert corners == 2, f"Expected exactly 2 corners, got {corners}"
+
+
+def test_topology_same_edge_different_lateral_offsets():
+    """
+    Verify that two positions on the same corridor edge with different lateral
+    offsets yield exactly 0 bends and along-corridor distance.
+    """
+    topo = TunnelTopology()
+    topo.add_node("start", (0.0, 0.0, 0.0))
+    topo.add_node("end", (30.0, 0.0, 0.0))
+    topo.add_edge("start", "end", "drift", width=3.5, height=3.0)
+
+    p1 = (10.0, 0.8, 0.5)
+    p2 = (22.0, -1.3, 0.5)
+    dist, corners, path = topo.shortest_path(p1, p2)
+
+    assert math.isclose(dist, 12.0, abs_tol=1e-3), f"Expected 12.0m, got {dist}m"
+    assert corners == 0, f"Expected 0 corners on same edge, got {corners}"
+
+
+
